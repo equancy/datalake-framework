@@ -12,6 +12,7 @@ version = "0.0.0"
 [tool.poetry.dependencies]
 python = "^3.8"
 requests = "^2.26.0"
+google-cloud-storage = "^1.42.3"
 
 [tool.poetry.dev-dependencies]
 black = "^21.9b0"
