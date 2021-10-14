@@ -1,14 +1,18 @@
 import pytest
-from datalake.provider.aws.storage import Storage
-
-BUCKET = "eqlab-datalake-landing"
+from tests.storage import *
+from datalake.provider.aws import Storage
 
 
 @pytest.fixture
-def storage():
-    return Storage(BUCKET)
+def bucket_name():
+    return "eqlab-datalake-landing"
 
 
-def test_exist(storage):
-    assert storage.exists("input/roshi.png")
-    assert not storage.exists("not_exists")
+@pytest.fixture
+def storage(bucket_name):
+    return Storage(bucket_name)
+
+
+def test_unknown_bucket():
+    with pytest.raises(ValueError):
+        return Storage("unknown-bucket")
