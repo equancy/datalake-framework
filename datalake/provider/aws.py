@@ -2,8 +2,6 @@ from datalake.interface import AbstractStorage
 import boto3
 import botocore
 
-COPY_TRANSFER_THRESHOLD = 5 * 1024 ** 3  # 5 GiB
-
 
 class Storage(AbstractStorage):
     def __init__(self, bucket):
@@ -56,61 +54,7 @@ class Storage(AbstractStorage):
 
         source = self._s3_client.head_object(Bucket=self._bucket, Key=src)
         source_size = source["ContentLength"]
-        if source_size > COPY_TRANSFER_THRESHOLD:
-            mpu = self._s3_client.create_multipart_upload(Bucket=bucket, Key=dst)
-            mpu_id = mpu["UploadId"]
-            try:
-                parts = range(int(source_size / COPY_TRANSFER_THRESHOLD))
-                uploaded_parts = []
-                for part in parts:
-                    start = part * COPY_TRANSFER_THRESHOLD
-                    end = (part + 1) * COPY_TRANSFER_THRESHOLD - 1
-                    partrange = f"bytes={start}-{end}"
-                    result = self._s3_client.upload_part_copy(
-                        Bucket=bucket,
-                        Key=dst,
-                        CopySource=copy_source,
-                        CopySourceRange=partrange,
-                        PartNumber=part + 1,
-                        UploadId=mpu_id,
-                    )
-                    uploaded_parts.append(
-                        {
-                            "ETag": result["CopyPartResult"]["ETag"],
-                            "PartNumber": part + 1,
-                        }
-                    )
-                start = len(parts) * COPY_TRANSFER_THRESHOLD
-                end = source_size - 1
-                partrange = f"bytes={start}-{end}"
-                result = self._s3_client.upload_part_copy(
-                    Bucket=bucket,
-                    Key=dst,
-                    CopySource=copy_source,
-                    CopySourceRange=partrange,
-                    PartNumber=len(parts) + 1,
-                    UploadId=mpu_id,
-                )
-                uploaded_parts.append(
-                    {
-                        "ETag": result["CopyPartResult"]["ETag"],
-                        "PartNumber": len(parts) + 1,
-                    }
-                )
-
-                self._s3_client.complete_multipart_upload(
-                    Bucket=bucket,
-                    Key=dst,
-                    MultipartUpload={"Parts": uploaded_parts},
-                    UploadId=mpu_id,
-                )
-            except Exception:
-                self._s3_client.abort_multipart_upload(
-                    Bucket=bucket, Key=dst, UploadId=mpu_id
-                )
-                raise
-        else:
-            self._s3_client.copy_object(CopySource=copy_source, Bucket=bucket, Key=dst)
+        self._s3_client.copy_object(CopySource=copy_source, Bucket=bucket, Key=dst)
 
     def delete(self, key):
         self._s3_client.delete_object(Bucket=self._bucket, Key=key)
