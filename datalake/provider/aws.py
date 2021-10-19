@@ -1,9 +1,9 @@
-from datalake.interface import AbstractStorage
+from datalake.interface import IStorage
 import boto3
 import botocore
 
 
-class Storage(AbstractStorage):
+class Storage(IStorage):
     def __init__(self, bucket):
         self._s3_client = boto3.client("s3")
         self._bucket = bucket
@@ -15,6 +15,9 @@ class Storage(AbstractStorage):
                     f"Bucket {bucket} doesn't exist or you don't have permissions to access it"
                 )
             raise  # pragma: no cover
+
+    def __repr__(self):
+        return f"s3://{self._bucket}"
 
     def exists(self, key):
         try:
@@ -77,8 +80,8 @@ class Storage(AbstractStorage):
         response = self._s3_client.get_object(Bucket=self._bucket, Key=key)
         return response["Body"].read().decode(response["ContentEncoding"])
 
-    def stream(self, key):
+    def stream(self, key, encoding="utf-8"):
         response = self._s3_client.get_object(Bucket=self._bucket, Key=key)
         for line in response["Body"].iter_lines():
             line = line.replace(b"\x00", b"")
-            yield line.decode(response["ContentEncoding"])
+            yield line.decode(encoding)

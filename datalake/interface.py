@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
 
 
-class AbstractStorage(ABC):  # pragma: no cover
+class IStorage(ABC):  # pragma: no cover
+    """
+    Storage interface
+    """
+
     @abstractmethod
     def exists(self, key):
         pass
@@ -39,5 +43,18 @@ class AbstractStorage(ABC):  # pragma: no cover
         pass
 
     @abstractmethod
-    def stream(self, key):
+    def stream(self, key, encoding="utf-8"):
+        pass
+
+
+class IStorageEvent(ABC):  # pragma: no cover
+    """
+    Storage event callback interface
+    """
+
+    @abstractmethod
+    def process(self, storage, object):
+        """
+        Callback method for handling an object
+        """
         pass

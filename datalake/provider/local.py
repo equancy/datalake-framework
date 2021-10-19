@@ -1,12 +1,15 @@
-from datalake.interface import AbstractStorage
+from datalake.interface import IStorage
 import os
 import shutil
 from glob import glob
 
 
-class Storage(AbstractStorage):
+class Storage(IStorage):
     def __init__(self, bucket):
         self._local = os.path.abspath(os.path.expanduser(bucket))
+
+    def __repr__(self):
+        return f"file://{self._local}"
 
     def exists(self, key):
         return os.path.isfile(os.path.join(self._local, key))
@@ -51,8 +54,8 @@ class Storage(AbstractStorage):
         with open(path, "r") as f:
             return f.read()
 
-    def stream(self, key):
+    def stream(self, key, encoding="utf-8"):
         path = os.path.join(self._local, key)
-        with open(path, "r") as f:
+        with open(path, "r", encoding=encoding) as f:
             for line in f.readlines():
                 yield line.replace("\n", "")
