@@ -22,11 +22,13 @@ class Datalake:
 
         # Configure Cloud provider
         self._provider = config["provider"]
-        if self._provider == "aws": # pragma: no cover
+        if self._provider == "aws":  # pragma: no cover
             self._provider_module = importlib.import_module("datalake.provider.aws")
-        elif self._provider == "gcp": # pragma: no cover
+        elif self._provider == "gcp":  # pragma: no cover
             self._provider_module = importlib.import_module("datalake.provider.gcp")
-        else:
+        elif self._provider == "local":
+            self._provider_module = importlib.import_module("datalake.provider.local")
+        else: # pragma: no cover
             raise DatalakeError(f"Invalid datalake provider found: {self._provider}")
 
         # Configure CSV dialect
