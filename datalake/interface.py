@@ -11,6 +11,10 @@ class IStorage(ABC):  # pragma: no cover
         pass
 
     @abstractmethod
+    def is_folder(self, key):
+        pass
+
+    @abstractmethod
     def keys_iterator(self, prefix):
         pass
 

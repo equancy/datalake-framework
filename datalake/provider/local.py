@@ -8,11 +8,14 @@ class Storage(IStorage):
     def __init__(self, bucket):
         self._local = os.path.abspath(os.path.expanduser(bucket))
 
-    def __repr__(self):
+    def __repr__(self): # pragma: no cover
         return f"file://{self._local}"
 
     def exists(self, key):
         return os.path.isfile(os.path.join(self._local, key))
+
+    def is_folder(self, key):
+        return os.path.isdir(os.path.join(self._local, key))
 
     def keys_iterator(self, prefix):
         base = os.path.join(self._local, prefix)

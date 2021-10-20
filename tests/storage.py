@@ -90,3 +90,8 @@ def test_get(storage, text):
 def test_stream(storage, text):
     data = [l for l in storage.stream(UPLOAD_KEY)]
     assert data == text.split("\n")
+
+
+def test_folder(storage):
+    assert storage.is_folder("trash/")
+    assert not storage.is_folder("input/roshi.png")

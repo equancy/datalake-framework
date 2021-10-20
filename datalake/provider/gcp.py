@@ -16,11 +16,19 @@ class Storage(IStorage):
                 f"Bucket {bucket} doesn't exist or you don't have permissions to access it"
             )
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return f"gs://{self._bucket.name}"
 
     def exists(self, key):
         return self._bucket.get_blob(key) is not None
+
+    def is_folder(self, key):
+        blob = self._bucket.get_blob(key)
+        return (
+            blob.content_type == "text/plain"
+            and blob.size == 0
+            and blob.name.endswith("/")
+        )
 
     def keys_iterator(self, prefix):
         for blob in list(self._client.list_blobs(self._bucket, prefix=prefix)):
@@ -73,10 +81,10 @@ class Storage(IStorage):
                 line = f.readline()
 
 
-class StorageNotifications:
-    def __init__(self, subscription, processor, max_messages=10):
-        if subscription is None:
-            raise ValueError("The PubSub subscription must be defined")
+class StorageNotifications:  # pragma: no cover
+    def __init__(self, subscription, processor, max_messages=1):
+        if subscription is None or len(subscription) == 0:
+            raise ValueError("PubSub subscription must be defined")
         if not isinstance(processor, IStorageEvent):
             raise ValueError("The event processor is not from the correct class")
 
@@ -96,24 +104,25 @@ class StorageNotifications:
                 }
             )
             ack = []
-            for msg in response.received_messages:
-                event = json.loads(msg.message.data.decode("utf-8"))
-                self._processor.process(Storage(event["bucket"]), event["name"])
-                ack.append(msg.ack_id)
-
-            if len(ack) > 0:
-                subscriber.acknowledge(
-                    request={
-                        "subscription": self._subscription,
-                        "ack_ids": ack,
-                    }
-                )
+            try:
+                for msg in response.received_messages:
+                    ack.append(msg.ack_id)
+                    self._preprocess(msg.message)
+            finally:
+                if len(ack) > 0:
+                    subscriber.acknowledge(
+                        request={
+                            "subscription": self._subscription,
+                            "ack_ids": ack,
+                        }
+                    )
 
     def daemon(self):
         def callback(message):
-            event = json.loads(message.data.decode("utf-8"))
-            self._processor.process(Storage(event["bucket"]), event["name"])
-            message.ack()
+            try:
+                self._preprocess(message)
+            finally:
+                message.ack()
 
         with pubsub.SubscriberClient() as subscriber:
             future = subscriber.subscribe(self._subscription, callback)
@@ -121,3 +130,16 @@ class StorageNotifications:
                 future.result()
             finally:
                 future.cancel()
+
+    def _preprocess(self, message):
+        event = json.loads(message.data.decode("utf-8"))
+
+        # check the message is a storage event
+        # see https://cloud.google.com/storage/docs/json_api/v1/objects#resource-representations
+        if "kind" not in event or event["kind"] != "storage#object":
+            return
+
+        bucket = event["bucket"]
+        name = event["name"]
+
+        self._processor.process(Storage(bucket), name)

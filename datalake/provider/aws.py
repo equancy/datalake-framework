@@ -1,6 +1,7 @@
-from datalake.interface import IStorage
+from urllib.parse import unquote_plus
 import boto3
 import botocore
+from datalake.interface import IStorage, IStorageEvent
 
 
 class Storage(IStorage):
@@ -16,7 +17,7 @@ class Storage(IStorage):
                 )
             raise  # pragma: no cover
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return f"s3://{self._bucket}"
 
     def exists(self, key):
@@ -27,6 +28,10 @@ class Storage(IStorage):
             if boto_error.response["Error"]["Code"] == "404":
                 return False
             raise  # pragma: no cover
+
+    def is_folder(self, key):
+        obj = self._s3_client.head_object(Bucket=self._bucket, Key=key)
+        return obj["ContentType"] == "application/x-directory; charset=UTF-8"
 
     def keys_iterator(self, prefix):
         paginator = self._s3_client.get_paginator("list_objects_v2")
@@ -85,3 +90,53 @@ class Storage(IStorage):
         for line in response["Body"].iter_lines():
             line = line.replace(b"\x00", b"")
             yield line.decode(encoding)
+
+
+class StorageEvents:  # pragma: no cover
+    def __init__(self, queue, processor, max_message=1, accept_folder=False):
+        if queue is None or len(queue) == 0:
+            raise ValueError("SQS queue must be defined")
+        if not isinstance(processor, IStorageEvent):
+            raise ValueError("The event processor is not from the correct class")
+
+        self._processor = processor
+        self._max_msg = max_messages
+        self._accept_folder = accept_folder
+
+        self._queue = boto3.resource("sqs").get_queue_by_name(QueueName=queue)
+
+    def batch(self):
+        messages = self._queue.receive_messages(
+            MaxNumberOfMessages=self._max_msg,
+            WaitTimeSeconds=20,
+        )
+        for message in messages:
+            try:
+                self._preprocess(message)
+            finally:
+                message.delete()
+
+    def daemon(self):
+        while True:
+            self.batch()
+
+    def _preprocess(self, message):
+
+        event = json.loads(message.body)
+
+        # Eventually unfold SNS envelope
+        if "Type" in event and event["Type"] == "Notification":
+            event = json.loads(event["Message"])
+
+        # S3 Event Notifications structure
+        # see: https://docs.aws.amazon.com/AmazonS3/latest/dev/notification-content-structure.html
+        if "Records" not in event or len(event["Records"]) == 0:
+            return
+        record = event["Records"][0]
+        if record["eventSource"] != "aws:s3":
+            return
+
+        bucket = record["s3"]["bucket"]["name"]
+        key = unquote_plus(record["s3"]["object"]["key"])
+
+        self._event_processor.process(s3_object)
