@@ -28,4 +28,4 @@ python-release:
   cache:
     paths:
     - dist
-    policy: push
+    policy: pull
