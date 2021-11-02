@@ -23,7 +23,7 @@ python-release:
   - tags
   image: 641143039263.dkr.ecr.eu-west-3.amazonaws.com/runner/ci-python:3.8
   script:
-  - poetry config repositories.equancy https://pypi.equancy.cloud/
+  - poetry config repositories.equancy https://pypi.apps.equancy.cloud/
   - poetry publish -r equancy -u ${PYPI_USER} -p ${PYPI_PASSWORD}
   cache:
     paths:
