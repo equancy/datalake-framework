@@ -21,6 +21,7 @@ black = "^21.9b0"
 coverage = "^6.0.2"
 flake9 = "^3.8.3"
 pytest = "^6.2.5"
+pook = "^1.0.2"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

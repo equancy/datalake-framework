@@ -139,4 +139,4 @@ class StorageEvents:  # pragma: no cover
         bucket = record["s3"]["bucket"]["name"]
         key = unquote_plus(record["s3"]["object"]["key"])
 
-        self._event_processor.process(s3_object)
+        self._processor.process(Storage(bucket), key)

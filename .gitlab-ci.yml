@@ -9,9 +9,11 @@ variables:
 
 python-build:
   stage: Python Build
+  only:
+  - tags
   image: 641143039263.dkr.ecr.eu-west-3.amazonaws.com/runner/ci-python:3.8
   script:
-  - poetry build --format wheel --quiet
+  - poetry build --quiet
   cache:
     paths:
     - dist
@@ -24,7 +26,8 @@ python-release:
   image: 641143039263.dkr.ecr.eu-west-3.amazonaws.com/runner/ci-python:3.8
   script:
   - poetry config repositories.equancy https://nexus.apps.equancy.cloud/repository/equancy-python/
-  - poetry publish -r equancy -u ${PYPI_USER} -p ${PYPI_PASSWORD}
+  - poetry config http-basic.equancy ${PYPI_USER} ${PYPI_PASSWORD}
+  - poetry publish -r equancy
   cache:
     paths:
     - dist

@@ -1,7 +1,7 @@
 import importlib
 import requests
 import csv
-from datalake.exceptions import DatalakeError, EntryNotFound
+from datalake.exceptions import DatalakeError, EntryNotFound, StoreNotFound
 
 
 class DatalakeDialect(csv.Dialect):
@@ -62,4 +62,13 @@ class Datalake:
         except requests.exceptions.HTTPError as http_error:
             if http_error.response.status_code == 404:
                 raise EntryNotFound(f"Entry '{key}' does not exist")
+            raise  # pragma: no cover
+    
+    def resolve_path(self, store, path):
+        try:
+            res = self._call_catalog(f"storage/{store}/{path}")
+            return res["bucket"], res["path"], res["uri"]
+        except requests.exceptions.HTTPError as http_error:
+            if http_error.response.status_code == 404:
+                raise StoreNotFound(f"Store '{store}' does not exist")
             raise  # pragma: no cover
