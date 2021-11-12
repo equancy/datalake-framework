@@ -10,6 +10,16 @@ gsutil notification create -e OBJECT_FINALIZE -p 'input/' -t datalake-landing-ev
 
 ## Unit testing
 
+launch a **development** datalake-catalog instance on port 8080
+
+```shell
+docker run --rm -d \
+    --name catalog \
+    -p 8080:8080 \
+    -e CATALOG_WORKERS=1 \
+    641143039263.dkr.ecr.eu-west-3.amazonaws.com/equancy-datalake/catalog:1.0.0-alpha.0
+```
+
 for GCP, get credentials for **equancyrandd**
 
 for AWS, get credentials for **equancy-lab**

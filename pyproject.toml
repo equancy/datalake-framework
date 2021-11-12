@@ -10,8 +10,8 @@ repository = "https://git.equancy.cloud/equancy/data-technologies/datalake-frame
 version = "0.0.0-alpha.2"
 
 [tool.poetry.dependencies]
-boto3 = "^1.18.60"
-google-cloud-pubsub = "^2.8.0"
+boto3 = "^1.20.4"
+google-cloud-pubsub = "^2.9.0"
 google-cloud-storage = "^1.42.3"
 python = "^3.8"
 requests = "^2.26.0"
@@ -21,7 +21,6 @@ black = "^21.9b0"
 coverage = "^6.0.2"
 flake9 = "^3.8.3"
 pytest = "^6.2.5"
-pook = "^1.0.2"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

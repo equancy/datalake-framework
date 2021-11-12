@@ -1,38 +1,32 @@
-import pook
+import json
+import os
 import pytest
+import requests
 import shutil
 import tempfile
 from datalake import Datalake
 from datalake.provider.local import Storage
 import datalake.exceptions
 
-CATALOG_URL = "http://catalog.datalake.local"
-CATALOG_CONFIG = {
-    "provider": "local",
-    "csv_format": {
-        "delimiter": ",",
-        "line_break": "\n",
-        "quote_char": '"',
-        "double_quote": True,
-        "escape_char": "\\",
-    },
-}
-pook.get(f"{CATALOG_URL}/configuration").persist().reply(200).json(CATALOG_CONFIG)
-
 
 @pytest.fixture(scope="module")
-def temp_dir():
-    temp_dir = tempfile.mkdtemp(prefix="datalake-framework_", suffix="_local_storage")
-    yield temp_dir
-    shutil.rmtree(temp_dir)
+def catalog_url():
+    url = os.getenv("CATALOG_URL", "http://localhost:8080")
+    authorization = {
+        "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYzMzkzNjU5NCwianRpIjoiNWQxMWNhN2MtMDVlNC00OTdkLWE0MmItZjRhNzgwYzZmYzI1IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Ik11YWRpYiIsIm5iZiI6MTYzMzkzNjU5NCwicm9sZSI6ImFkbWluIn0.49dawf9sAbrAxE1aac5aXMHzKxPHXM7FMnznb5UbO6I"
+    }
+    with open("tests/files/storage.json", "r") as f:
+        requests.put(f"{url}/storage", headers=authorization, json=json.load(f))
+
+    with open("tests/files/catalog.json", "r") as f:
+        requests.post(
+            f"{url}/catalog/import?truncate", headers=authorization, json=json.load(f)
+        )
+    return url
 
 
-@pook.on
-def test_config(temp_dir):
-    pook.get(f"{CATALOG_URL}/catalog/entry/valid").reply(200).json({"feed": "mock"})
-    pook.get(f"{CATALOG_URL}/catalog/entry/invalid").reply(404)
-
-    d = Datalake(CATALOG_URL)
+def test_config(catalog_url):
+    d = Datalake(catalog_url)
     assert d.provider == "local"
 
     entry = d.get_catalog("valid")
@@ -41,35 +35,21 @@ def test_config(temp_dir):
     with pytest.raises(datalake.exceptions.EntryNotFound):
         d.get_catalog("invalid")
 
-    s = d.get_storage(temp_dir)
+    s = d.get_storage("any-bucket")
     assert isinstance(s, Storage)
 
 
-@pook.on
-def test_storage_path(temp_dir):
-    pook.get(f"{CATALOG_URL}/storage/trash/input/my-file.csv").reply(200).json(
-        {
-            "bucket": "/tmp/unit-test",
-            "path": ".Trash/input/my-file.csv",
-            "uri": "file:///tmp/unit-test/.Trash/input/my-file.csv",
-        }
-    )
-    pook.get(f"{CATALOG_URL}/storage/invalid/input/my-file.csv").reply(404)
-
-    d = Datalake(CATALOG_URL)
-    res = d.resolve_path("trash", "input/my-file.csv")
+def test_storage_path(catalog_url):
+    d = Datalake(catalog_url)
+    res = d.resolve_path("trash", "my-file.csv")
     # returns a Storage instance and the resolved path
     assert isinstance(res, tuple), "Response should be a tuple"
+    assert res[0] == "trash-bucket", "The bucket should be the one returned by the API"
+    assert res[1] == "my-file.csv", "The path should be the one returned by the API"
     assert (
-        res[0] == "/tmp/unit-test"
-    ), "The storage should be from the bucket returned by the API"
-    assert (
-        res[1] == ".Trash/input/my-file.csv"
-    ), "The path should be the one returned by the API"
-    assert (
-        res[2] == "file:///tmp/unit-test/.Trash/input/my-file.csv"
+        res[2] == "file://trash-bucket/my-file.csv"
     ), "The URI should be the one returned by the API"
 
     # Unknown store should raise an error
     with pytest.raises(datalake.exceptions.StoreNotFound):
-        d.resolve_path("invalid", "input/my-file.csv")
+        d.resolve_path("invalid", "my-file.csv")

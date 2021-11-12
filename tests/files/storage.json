@@ -1,0 +1,20 @@
+{
+    "trash": {
+        "bucket": "trash-bucket"
+    },
+    "purgatory": {
+        "bucket": "purgatory-bucket"
+    },
+    "archive": {
+        "bucket": "archive-bucket"
+    },
+    "landing": {
+        "bucket": "landing-bucket"
+    },
+    "stronghold": {
+        "bucket": "stronghold-bucket"
+    },
+    "pseudonymized": {
+        "bucket": "pseudonymized-bucket"
+    }
+}
