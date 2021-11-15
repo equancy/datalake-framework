@@ -29,5 +29,5 @@ export AWS_PROFILE='equancy-lab'
 export GOOGLE_APPLICATION_CREDENTIALS='path/to/key.json'
 
 poetry install
-poetry run coverage run -m pytest && poetry run coverage report -m
+poetry run coverage run -m pytest && poetry run coverage report --omit='tests/*' -m
 ```

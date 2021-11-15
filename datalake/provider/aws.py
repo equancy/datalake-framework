@@ -1,4 +1,5 @@
 from urllib.parse import unquote_plus
+import hashlib
 import boto3
 import botocore
 from datalake.interface import IStorage, IStorageEvent
@@ -28,6 +29,13 @@ class Storage(IStorage):
             if boto_error.response["Error"]["Code"] == "404":
                 return False
             raise  # pragma: no cover
+
+    def checksum(self, key):
+        response = self._s3_client.get_object(Bucket=self._bucket, Key=key)
+        m = hashlib.sha256()
+        for chunk in response["Body"].iter_chunks():
+            m.update(chunk)
+        return m.hexdigest()
 
     def is_folder(self, key):
         obj = self._s3_client.head_object(Bucket=self._bucket, Key=key)

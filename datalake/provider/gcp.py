@@ -1,4 +1,5 @@
 from datalake.interface import IStorage, IStorageEvent
+import hashlib
 import json
 import google.auth
 import google.cloud.exceptions
@@ -21,6 +22,17 @@ class Storage(IStorage):
 
     def exists(self, key):
         return self._bucket.get_blob(key) is not None
+
+    def checksum(self, key):
+        blob = self._bucket.get_blob(key)
+        m = hashlib.sha256()
+        with blob.open("rb") as f:
+            while True:
+                chunk = f.read(1024)
+                if not chunk:
+                    break    
+                m.update(chunk)
+        return m.hexdigest()
 
     def is_folder(self, key):
         blob = self._bucket.get_blob(key)

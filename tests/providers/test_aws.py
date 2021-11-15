@@ -5,12 +5,17 @@ from datalake.provider.aws import Storage
 
 @pytest.fixture
 def bucket_name():
-    return "eqlab-datalake-landing"
+    return "eqlab-datamock-ephemeral"
 
 
 @pytest.fixture
 def storage(bucket_name):
     return Storage(bucket_name)
+
+
+@pytest.fixture
+def persisted():
+    return Storage("eqlab-datamock-persist")
 
 
 def test_unknown_bucket():

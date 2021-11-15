@@ -1,4 +1,5 @@
 from datalake.interface import IStorage
+import hashlib
 import os
 import shutil
 from glob import glob
@@ -8,11 +9,22 @@ class Storage(IStorage):
     def __init__(self, bucket):
         self._local = os.path.abspath(os.path.expanduser(bucket))
 
-    def __repr__(self): # pragma: no cover
+    def __repr__(self):  # pragma: no cover
         return f"file://{self._local}"
 
     def exists(self, key):
         return os.path.isfile(os.path.join(self._local, key))
+
+    def checksum(self, key):
+        path = os.path.join(self._local, key)
+        m = hashlib.sha256()
+        with open(path, "rb") as f:
+            while True:
+                chunk = f.read(1024)
+                if not chunk:
+                    break
+                m.update(chunk)
+        return m.hexdigest()
 
     def is_folder(self, key):
         return os.path.isdir(os.path.join(self._local, key))
@@ -37,6 +49,8 @@ class Storage(IStorage):
     def copy(self, src, dst, bucket=None):
         src_path = os.path.join(self._local, src)
         dst_path = os.path.join(self._local, dst)
+        dst_parent = os.path.dirname(dst_path)
+        os.makedirs(dst_parent)
         shutil.copy(src_path, dst_path)
 
     def delete(self, key):
@@ -45,10 +59,14 @@ class Storage(IStorage):
     def move(self, src, dst, bucket=None):
         src_path = os.path.join(self._local, src)
         dst_path = os.path.join(self._local, dst)
+        dst_parent = os.path.dirname(dst_path)
+        os.makedirs(dst_parent)
         shutil.move(src_path, dst_path)
 
     def put(self, content, dst, content_type="text/csv", encoding="utf-8", metadata={}):
         dst_path = os.path.join(self._local, dst)
+        dst_parent = os.path.dirname(dst_path)
+        os.makedirs(dst_parent)
         with open(dst_path, "w", encoding=encoding) as f:
             f.write(content)
 
