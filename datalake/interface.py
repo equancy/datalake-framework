@@ -6,6 +6,11 @@ class IStorage(ABC):  # pragma: no cover
     Storage interface
     """
 
+    @property
+    @abstractmethod
+    def name(self):
+        pass
+
     @abstractmethod
     def exists(self, key):
         pass

@@ -21,6 +21,10 @@ class Storage(IStorage):
     def __repr__(self):  # pragma: no cover
         return f"s3://{self._bucket}"
 
+    @property
+    def name(self):
+        return self._bucket
+
     def exists(self, key):
         try:
             self._s3_client.head_object(Bucket=self._bucket, Key=key)

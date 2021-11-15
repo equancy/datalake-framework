@@ -4,13 +4,8 @@ from datalake.provider.aws import Storage
 
 
 @pytest.fixture
-def bucket_name():
-    return "eqlab-datamock-ephemeral"
-
-
-@pytest.fixture
-def storage(bucket_name):
-    return Storage(bucket_name)
+def storage():
+    return Storage("eqlab-datamock-ephemeral")
 
 
 @pytest.fixture

@@ -12,6 +12,7 @@ class Storage(IStorage):
         self._client = google_storage.Client()
         try:
             self._bucket = self._client.get_bucket(bucket)
+            self._bucket_name = bucket
         except google.cloud.exceptions.NotFound:
             raise ValueError(
                 f"Bucket {bucket} doesn't exist or you don't have permissions to access it"
@@ -19,6 +20,10 @@ class Storage(IStorage):
 
     def __repr__(self):  # pragma: no cover
         return f"gs://{self._bucket.name}"
+
+    @property
+    def name(self):
+        return self._bucket_name
 
     def exists(self, key):
         return self._bucket.get_blob(key) is not None
@@ -30,7 +35,7 @@ class Storage(IStorage):
             while True:
                 chunk = f.read(1024)
                 if not chunk:
-                    break    
+                    break
                 m.update(chunk)
         return m.hexdigest()
 

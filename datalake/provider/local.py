@@ -7,10 +7,15 @@ from glob import glob
 
 class Storage(IStorage):
     def __init__(self, bucket):
+        self._bucket = bucket
         self._local = os.path.abspath(os.path.expanduser(bucket))
 
     def __repr__(self):  # pragma: no cover
         return f"file://{self._local}"
+
+    @property
+    def name(self):
+        return self._bucket
 
     def exists(self, key):
         return os.path.isfile(os.path.join(self._local, key))

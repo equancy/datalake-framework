@@ -80,10 +80,10 @@ def test_download(persisted, temp_file):
     assert m.hexdigest() == ROSHI_SHA256
 
 
-def test_copy(storage, test_id, bucket_name):
+def test_copy(storage, test_id):
     src = f"{test_id}/schiller/ode-to-joy.txt"
     dst = f"{test_id}/beethoven/symphony-9.txt"
-    storage.copy(src, dst, bucket_name)
+    storage.copy(src, dst, storage.name)
     assert storage.exists(dst)
     assert storage.checksum(src) == storage.checksum(dst)
 
@@ -95,13 +95,13 @@ def test_delete(storage, test_id):
     assert not storage.exists(key)
 
 
-def test_move(storage, test_id, bucket_name):
+def test_move(storage, test_id):
     src = f"{test_id}/beethoven/symphony-9.txt"
     dst = f"{test_id}/classics/an-die-freude.txt"
     assert storage.exists(src)
     assert not storage.exists(dst)
     checksum = storage.checksum(src)
-    storage.move(src, dst, bucket_name)
+    storage.move(src, dst, storage.name)
     assert not storage.exists(src)
     assert storage.exists(dst)
     assert checksum == storage.checksum(dst)
