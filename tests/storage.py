@@ -83,9 +83,24 @@ def test_download(persisted, temp_file):
 def test_copy(storage, test_id):
     src = f"{test_id}/schiller/ode-to-joy.txt"
     dst = f"{test_id}/beethoven/symphony-9.txt"
-    storage.copy(src, dst, storage.name)
+    assert storage.exists(src)
+    assert not storage.exists(dst)
+    storage.copy(src, dst)
+    assert storage.exists(src)
     assert storage.exists(dst)
     assert storage.checksum(src) == storage.checksum(dst)
+
+
+def test_copy_across(persisted, storage, test_id):
+    # Copy across buckets
+    src = "an-die-freude/part-1.txt"
+    dst = f"{test_id}/an-die-freude/part-1.txt"
+    assert persisted.exists(src)
+    assert not storage.exists(dst)
+    persisted.copy(src, dst, storage.name)
+    assert persisted.exists(src)
+    assert storage.exists(dst)
+    assert persisted.checksum(src) == storage.checksum(dst)
 
 
 def test_delete(storage, test_id):

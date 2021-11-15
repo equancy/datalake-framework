@@ -53,7 +53,12 @@ class Storage(IStorage):
 
     def copy(self, src, dst, bucket=None):
         src_path = os.path.join(self._local, src)
-        dst_path = os.path.join(self._local, dst)
+        dst_bucket = (
+            self._local
+            if bucket is None
+            else os.path.abspath(os.path.expanduser(bucket))
+        )
+        dst_path = os.path.join(dst_bucket, dst)
         dst_parent = os.path.dirname(dst_path)
         os.makedirs(dst_parent, exist_ok=True)
         shutil.copy(src_path, dst_path)
@@ -63,7 +68,12 @@ class Storage(IStorage):
 
     def move(self, src, dst, bucket=None):
         src_path = os.path.join(self._local, src)
-        dst_path = os.path.join(self._local, dst)
+        dst_bucket = (
+            self._local
+            if bucket is None
+            else os.path.abspath(os.path.expanduser(bucket))
+        )
+        dst_path = os.path.join(dst_bucket, dst)
         dst_parent = os.path.dirname(dst_path)
         os.makedirs(dst_parent, exist_ok=True)
         shutil.move(src_path, dst_path)
