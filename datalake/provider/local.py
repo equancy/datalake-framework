@@ -44,7 +44,7 @@ class Storage(IStorage):
     def upload(self, src, dst, content_type="text/csv", encoding="utf-8", metadata={}):
         dst_path = os.path.join(self._local, dst)
         dst_parent = os.path.dirname(dst_path)
-        os.makedirs(dst_parent)
+        os.makedirs(dst_parent, exist_ok=True)
         shutil.copy(src, dst_path)
 
     def download(self, src, dst):
@@ -55,7 +55,7 @@ class Storage(IStorage):
         src_path = os.path.join(self._local, src)
         dst_path = os.path.join(self._local, dst)
         dst_parent = os.path.dirname(dst_path)
-        os.makedirs(dst_parent)
+        os.makedirs(dst_parent, exist_ok=True)
         shutil.copy(src_path, dst_path)
 
     def delete(self, key):
@@ -65,13 +65,13 @@ class Storage(IStorage):
         src_path = os.path.join(self._local, src)
         dst_path = os.path.join(self._local, dst)
         dst_parent = os.path.dirname(dst_path)
-        os.makedirs(dst_parent)
+        os.makedirs(dst_parent, exist_ok=True)
         shutil.move(src_path, dst_path)
 
     def put(self, content, dst, content_type="text/csv", encoding="utf-8", metadata={}):
         dst_path = os.path.join(self._local, dst)
         dst_parent = os.path.dirname(dst_path)
-        os.makedirs(dst_parent)
+        os.makedirs(dst_parent, exist_ok=True)
         with open(dst_path, "w", encoding=encoding) as f:
             f.write(content)
 
