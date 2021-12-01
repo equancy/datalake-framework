@@ -12,9 +12,11 @@
         "bucket": "landing-bucket"
     },
     "stronghold": {
-        "bucket": "stronghold-bucket"
+        "bucket": "data-bucket",
+        "prefix": "stronghold"
     },
     "pseudonymized": {
-        "bucket": "pseudonymized-bucket"
+        "bucket": "data-bucket",
+        "prefix": "pseudonymized"
     }
 }

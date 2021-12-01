@@ -25,5 +25,59 @@
                 "type": "number"
             }
         ]
+    },
+    "duplicate1": {
+        "domain": "unit-test",
+        "provider": "equancy",
+        "feed": "duplicate",
+        "storage": {
+            "path": {
+                "pattern": "{domain}/{provider}/{feed}.csv",
+                "params": {
+                    "date": "YYYY-MM-DD"
+                }
+            },
+            "stores": [
+                "stronghold",
+                "pseudonymized"
+            ]
+        },
+        "columns": [
+            {
+                "name": "column1",
+                "type": "string"
+            },
+            {
+                "name": "column2",
+                "type": "number"
+            }
+        ]
+    },
+    "duplicate2": {
+        "domain": "unit-test",
+        "provider": "equancy",
+        "feed": "duplicate",
+        "storage": {
+            "path": {
+                "pattern": "{domain}/{provider}/{feed}.csv",
+                "params": {
+                    "date": "YYYY-MM-DD"
+                }
+            },
+            "stores": [
+                "stronghold",
+                "pseudonymized"
+            ]
+        },
+        "columns": [
+            {
+                "name": "column1",
+                "type": "string"
+            },
+            {
+                "name": "column2",
+                "type": "number"
+            }
+        ]
     }
 }

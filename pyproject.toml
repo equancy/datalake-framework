@@ -7,20 +7,27 @@ packages = [
   {include = "datalake"},
 ]
 repository = "https://git.equancy.cloud/equancy/data-technologies/datalake-framework"
-version = "0.0.0-alpha.4"
+version = "0.0.0-alpha.5"
 
 [tool.poetry.dependencies]
-boto3 = "^1.20.4"
+boto3 = "^1.20.16"
 google-cloud-pubsub = "^2.9.0"
-google-cloud-storage = "^1.42.3"
+google-cloud-storage = "^1.43.0"
 python = "^3.8"
 requests = "^2.26.0"
 
 [tool.poetry.dev-dependencies]
 black = "^21.9b0"
-coverage = "^6.0.2"
+coverage = "^6.2"
 flake9 = "^3.8.3"
 pytest = "^6.2.5"
+
+[tool.black]
+line-length = 125
+target-version = ["py38"]
+
+[tool.coverage.report]
+omit = ["tests/*"]
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
