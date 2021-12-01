@@ -100,22 +100,45 @@ class Datalake:
                 raise EntryNotFound(f"No entry found for path '{path}'")
             raise  # pragma: no cover
 
-    def get_entry_path(self, key, path_params=None):
+    def get_entry_path(self, key, path_params=None, strict=False):
         """
         Builds a path for the specified entry with the given parameters
         """
         try:
             res = self._call_catalog(f"catalog/storage/{key}", path_params)
+            if strict and res["is_partial"]:
+                raise ValueError(f"Missing parameters for entry '{key}'")
             return res["prefix"]
         except requests.exceptions.HTTPError as http_error:
             if http_error.response.status_code == 404:
                 raise EntryNotFound(f"Entry '{key}' does not exist")
             raise  # pragma: no cover
 
-    def get_entry_path_resolved(self, store, key, path_params={}):
+    def get_entry_path_resolved(self, store, key, path_params=None, strict=False):
         """
         Returns the resolved path for the specified entry with the given parameters and a storage for the specifed store
         """
-        path = self.get_entry_path(key, path_params)
+        path = self.get_entry_path(key, path_params, strict)
         bucket, resolved, _ = self.resolve_path(store, path)
         return self.get_storage(bucket), resolved
+
+    def upload(self, filepath, store, key, path_params=None, content_type="text/plain", encoding="utf-8", metadata={}):
+        """
+        Uploads a local file in a store as the specified catalog entry
+        """
+        storage, path = self.get_entry_path_resolved(store, key, path_params, strict=True)
+        storage.upload(filepath, path, content_type, encoding, metadata)
+
+    def download(self, store, key, filepath, path_params=None):
+        """
+        Downloads the specified catalog entry from a store to a local file
+        """
+        storage, path = self.get_entry_path_resolved(store, key, path_params, strict=True)
+        storage.download(path, filepath)
+
+    def list_entry_files(self, store, key, path_params=None):
+        """
+        Returns the list of files in a store for the specified catalog entry
+        """
+        storage, path = self.get_entry_path_resolved(store, key, path_params, strict=False)
+        return storage.keys_iterator(path)

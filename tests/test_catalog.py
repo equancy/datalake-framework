@@ -71,8 +71,12 @@ def test_entry_path(catalog_url):
     res = d.get_entry_path("valid")
     assert res == "unit-test/equancy/mock/"
 
-    res = d.get_entry_path("valid", {"date": "2056-05-23"})
+    res = d.get_entry_path("valid", {"date": "2056-05-23"}, strict=True)
     assert res == "unit-test/equancy/mock/2056-05-23/2056-05-23_mock.csv"
+
+    with pytest.raises(ValueError) as e:
+        res = d.get_entry_path("valid", strict=True)
+    assert str(e.value).startswith("Missing parameters")
 
     with pytest.raises(datalake.exceptions.EntryNotFound):
         d.get_entry_path("invalid")
