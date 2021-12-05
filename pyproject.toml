@@ -7,7 +7,7 @@ packages = [
   {include = "datalake"},
 ]
 repository = "https://git.equancy.cloud/equancy/data-technologies/datalake-framework"
-version = "0.0.0-alpha.6"
+version = "0.0.0-alpha.7"
 
 [tool.poetry.dependencies]
 boto3 = "^1.20.16"
