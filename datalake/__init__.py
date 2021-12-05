@@ -128,6 +128,7 @@ class Datalake:
         """
         storage, path = self.get_entry_path_resolved(store, key, path_params, strict=True)
         storage.upload(filepath, path, content_type, encoding, metadata)
+        return path
 
     def download(self, store, key, filepath, path_params=None):
         """

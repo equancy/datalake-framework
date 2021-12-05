@@ -98,6 +98,12 @@ class IStorage(ABC):  # pragma: no cover
         """
         pass
 
+    @abstractmethod
+    def size(self, key):
+        """
+        Return the size in bytes for the specified key
+        """
+        pass
 
 class IStorageEvent(ABC):  # pragma: no cover
     """

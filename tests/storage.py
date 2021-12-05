@@ -37,6 +37,10 @@ def test_checksum(persisted):
     assert persisted.checksum("roshi.png") == ROSHI_SHA256
 
 
+def test_size(persisted):
+    assert persisted.size("roshi.png") == 109376
+
+
 def test_folder(persisted):
     assert persisted.is_folder("empty-folder/")
     assert not persisted.is_folder("roshi.png")

@@ -53,11 +53,7 @@ class Storage(IStorage):
 
     def copy(self, src, dst, bucket=None):
         src_path = os.path.join(self._local, src)
-        dst_bucket = (
-            self._local
-            if bucket is None
-            else os.path.abspath(os.path.expanduser(bucket))
-        )
+        dst_bucket = self._local if bucket is None else os.path.abspath(os.path.expanduser(bucket))
         dst_path = os.path.join(dst_bucket, dst)
         dst_parent = os.path.dirname(dst_path)
         os.makedirs(dst_parent, exist_ok=True)
@@ -68,11 +64,7 @@ class Storage(IStorage):
 
     def move(self, src, dst, bucket=None):
         src_path = os.path.join(self._local, src)
-        dst_bucket = (
-            self._local
-            if bucket is None
-            else os.path.abspath(os.path.expanduser(bucket))
-        )
+        dst_bucket = self._local if bucket is None else os.path.abspath(os.path.expanduser(bucket))
         dst_path = os.path.join(dst_bucket, dst)
         dst_parent = os.path.dirname(dst_path)
         os.makedirs(dst_parent, exist_ok=True)
@@ -95,3 +87,6 @@ class Storage(IStorage):
         with open(path, "r", encoding=encoding) as f:
             for line in f.readlines():
                 yield line.replace("\n", "")
+
+    def size(self, key):
+        return os.path.getsize(os.path.join(self._local, key))

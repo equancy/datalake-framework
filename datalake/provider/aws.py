@@ -13,9 +13,7 @@ class Storage(IStorage):
             self._s3_client.head_bucket(Bucket=bucket)
         except botocore.exceptions.ClientError as boto_error:
             if boto_error.response["Error"]["Code"] in ("404", "403"):
-                raise ValueError(
-                    f"Bucket {bucket} doesn't exist or you don't have permissions to access it"
-                )
+                raise ValueError(f"Bucket {bucket} doesn't exist or you don't have permissions to access it")
             raise  # pragma: no cover
 
     def __repr__(self):  # pragma: no cover
@@ -102,6 +100,9 @@ class Storage(IStorage):
         for line in response["Body"].iter_lines():
             line = line.replace(b"\x00", b"")
             yield line.decode(encoding)
+
+    def size(self, key):
+        return self._s3_client.head_object(Bucket=self._bucket, Key=key)["ContentLength"]
 
 
 class StorageEvents:  # pragma: no cover

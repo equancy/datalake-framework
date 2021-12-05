@@ -14,9 +14,7 @@ class Storage(IStorage):
             self._bucket = self._client.get_bucket(bucket)
             self._bucket_name = bucket
         except google.cloud.exceptions.NotFound:
-            raise ValueError(
-                f"Bucket {bucket} doesn't exist or you don't have permissions to access it"
-            )
+            raise ValueError(f"Bucket {bucket} doesn't exist or you don't have permissions to access it")
 
     def __repr__(self):  # pragma: no cover
         return f"gs://{self._bucket.name}"
@@ -41,11 +39,7 @@ class Storage(IStorage):
 
     def is_folder(self, key):
         blob = self._bucket.get_blob(key)
-        return (
-            blob.content_type == "text/plain"
-            and blob.size == 0
-            and blob.name.endswith("/")
-        )
+        return blob.content_type == "text/plain" and blob.size == 0 and blob.name.endswith("/")
 
     def keys_iterator(self, prefix):
         for blob in list(self._client.list_blobs(self._bucket, prefix=prefix)):
@@ -96,6 +90,9 @@ class Storage(IStorage):
             while line != "":
                 yield line.replace("\n", "")
                 line = f.readline()
+
+    def size(self, key):
+        return self._bucket.get_blob(key).size
 
 
 class StorageNotifications:  # pragma: no cover
