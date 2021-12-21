@@ -10,9 +10,11 @@ repository = "https://git.equancy.cloud/equancy/data-technologies/datalake-frame
 version = "0.0.0-alpha.7"
 
 [tool.poetry.dependencies]
+Babel = "^2.9.1"
 boto3 = "^1.20.16"
 google-cloud-pubsub = "^2.9.0"
 google-cloud-storage = "^1.43.0"
+pendulum = "^2.1.2"
 python = "^3.8"
 requests = "^2.26.0"
 

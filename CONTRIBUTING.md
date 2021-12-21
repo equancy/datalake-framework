@@ -17,7 +17,7 @@ docker run --rm -d \
     --name catalog \
     -p 8080:8080 \
     -e CATALOG_WORKERS=1 \
-    641143039263.dkr.ecr.eu-west-3.amazonaws.com/equancy-datalake/catalog:1.0.0-alpha.0
+    641143039263.dkr.ecr.eu-west-3.amazonaws.com/equancy-datalake/catalog:1.0.0-alpha.1
 ```
 
 for GCP, get credentials for **equancyrandd**

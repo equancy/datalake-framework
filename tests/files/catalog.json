@@ -17,12 +17,28 @@
         },
         "columns": [
             {
-                "name": "column1",
+                "name": "column_str",
                 "type": "string"
             },
             {
-                "name": "column2",
-                "type": "number"
+                "name": "column_int",
+                "type": "integer"
+            },
+            {
+                "name": "column_dec",
+                "type": "decimal"
+            },
+            {
+                "name": "column_date",
+                "type": "date"
+            },
+            {
+                "name": "column_time",
+                "type": "time"
+            },
+            {
+                "name": "column_datetime",
+                "type": "datetime"
             }
         ]
     },
@@ -77,6 +93,391 @@
             {
                 "name": "column2",
                 "type": "number"
+            }
+        ]
+    },
+    "SANTE-specialites": {
+        "domain": "santé",
+        "provider": "BDPM",
+        "feed": "spécialités",
+        "metadata": {
+            "description": "Il contient la liste des médicaments commercialisés ou en arrêt de commercialisation depuis moins de trois ans",
+            "source_url": "https://base-donnees-publique.medicaments.gouv.fr/telechargement.php?fichier=CIS_bdpm.txt"
+        },
+        "storage": {
+            "path": {
+                "pattern": "{domain}/{provider}/{feed}.csv"
+            },
+            "stores": [
+                "stronghold"
+            ]
+        },
+        "columns": [
+            {
+                "name": "code_cis",
+                "type": "string",
+                "description": "Code CIS (Code Identifiant de Spécialité)"
+            },
+            {
+                "name": "denomination",
+                "type": "string",
+                "description": "Dénomination du médicament"
+            },
+            {
+                "name": "forme_pharma",
+                "type": "string",
+                "description": "Forme pharmaceutique"
+            },
+            {
+                "name": "voie_administration",
+                "type": "string",
+                "description": "Voies d'administration (avec un séparateur « ; » entre chaque valeur quand il y en a plusieurs)"
+            },
+            {
+                "name": "statut_amm",
+                "type": "string",
+                "description": "Statut administratif de l'autorisation de mise sur le marché (AMM)"
+            },
+            {
+                "name": "type_amm",
+                "type": "string",
+                "description": "Type de procédure d'autorisation de mise sur le marché (AMM)"
+            },
+            {
+                "name": "etat_commercial",
+                "type": "string",
+                "description": "Etat de commercialisation"
+            },
+            {
+                "name": "date_amm",
+                "type": "date",
+                "description": "Date d'AMM (format JJ/MM/AAAA)"
+            },
+            {
+                "name": "statut_bdm",
+                "type": "string",
+                "description": "StatutBdm : « Alerte » (icône rouge) ou « Warning disponibilité » (icône grise)"
+            },
+            {
+                "name": "num_autorisation_eu",
+                "type": "string",
+                "description": "Numéro de l'autorisation européenne"
+            },
+            {
+                "name": "titulaires",
+                "type": "string",
+                "description": "Titulaire(s) : S'il y a plusieurs titulaires, les valeurs seront séparées par des « ; »"
+            },
+            {
+                "name": "surveillance_renforcee",
+                "type": "string",
+                "description": "Surveillance renforcée (triangle noir) : valeurs « Oui » ou « Non »"
+            }
+        ]
+    },
+    "SANTE-presentations": {
+        "domain": "santé",
+        "provider": "BDPM",
+        "feed": "présentations",
+        "metadata": {
+            "description": "Il contient la liste des présentations (boîtes de médicaments) disponibles pour les médicaments",
+            "source_url": "https://base-donnees-publique.medicaments.gouv.fr/telechargement.php?fichier=CIS_CIP_bdpm.txt"
+        },
+        "storage": {
+            "path": {
+                "pattern": "{domain}/{provider}/{feed}.csv"
+            },
+            "stores": [
+                "stronghold"
+            ]
+        },
+        "columns": [
+            {
+                "name": "code_cis",
+                "type": "string",
+                "description": "Code CIS"
+            },
+            {
+                "name": "code_cip7",
+                "type": "string",
+                "description": "Code CIP7 (Code Identifiant de Présentation à 7 chiffres)"
+            },
+            {
+                "name": "libelle_presentation",
+                "type": "string",
+                "description": "Libellé de la présentation"
+            },
+            {
+                "name": "statut_administratif",
+                "type": "string",
+                "description": "Statut administratif de la présentation"
+            },
+            {
+                "name": "etat_commercial",
+                "type": "string",
+                "description": "Etat de commercialisation de la présentation tel que déclaré par le titulaire de l'AMM"
+            },
+            {
+                "name": "date_declaration",
+                "type": "date",
+                "description": "Date de la déclaration de commercialisation (format JJ/MM/AAAA)"
+            },
+            {
+                "name": "code_cip13",
+                "type": "string",
+                "description": "Code CIP13 (Code Identifiant de Présentation à 13 chiffres)"
+            },
+            {
+                "name": "agrement",
+                "type": "string",
+                "description": "Agrément aux collectivités (\"oui\", \"non\" ou « inconnu »)"
+            },
+            {
+                "name": "taux_remboursement",
+                "type": "string",
+                "description": "Taux de remboursement (avec un séparateur « ; » entre chaque valeur quand il y en a plusieurs)"
+            },
+            {
+                "name": "prix_medicament_eur",
+                "type": "decimal",
+                "description": "Prix du médicament en euro"
+            },
+            {
+                "name": "prix_medicament_ttc",
+                "type": "decimal"
+            },
+            {
+                "name": "prix_medicament_tva",
+                "type": "decimal"
+            },
+            {
+                "name": "indications",
+                "type": "string",
+                "description": "Texte présentant les indications ouvrant droit au remboursement par l'assurance maladie s'il y a plusieurs taux de remboursement pour la même présentation"
+            }
+        ]
+    },
+    "SANTE-compositions": {
+        "domain": "santé",
+        "provider": "BDPM",
+        "feed": "compositions",
+        "metadata": {
+            "description": "contient la composition qualitative et quantitative en substances actives et fractions thérapeutiques (telle que figurant dans le Résumé des Caractéristiques du Produit) des médicaments de la BDPM",
+            "source_url": "https://base-donnees-publique.medicaments.gouv.fr/telechargement.php?fichier=CIS_COMPO_bdpm.txt"
+        },
+        "storage": {
+            "path": {
+                "pattern": "{domain}/{provider}/{feed}.csv"
+            },
+            "stores": [
+                "stronghold"
+            ]
+        },
+        "columns": [
+            {
+                "name": "code_cis",
+                "type": "string",
+                "description": "Code CIS"
+            },
+            {
+                "name": "designation_pharma",
+                "type": "string",
+                "description": "Désignation de l'élément pharmaceutique"
+            },
+            {
+                "name": "code_substance",
+                "type": "string",
+                "description": "Code de la substance"
+            },
+            {
+                "name": "denomination_substance",
+                "type": "string",
+                "description": "Dénomination de la substance"
+            },
+            {
+                "name": "dosage_substance",
+                "type": "string",
+                "description": "Dosage de la substance"
+            },
+            {
+                "name": "reference_dosage",
+                "type": "string",
+                "description": "Référence de ce dosage (exemple : [pour] un comprimé)"
+            },
+            {
+                "name": "nature_composant",
+                "type": "string",
+                "description": "Nature du composant (principe actif « SA » ou fraction thérapeutique « ST »)"
+            },
+            {
+                "name": "numero_liaison",
+                "type": "string",
+                "description": "Numéro permettant de lier, le cas échéant, substances actives et fractions thérapeutiques"
+            }
+        ]
+    },
+    "SANTE-avis_has": {
+        "domain": "santé",
+        "provider": "BDPM",
+        "feed": "avis-has",
+        "metadata": {
+            "description": "Il contient l'ensemble des avis de SMR ou ASMR de la HAS postérieurs à l'année 2002",
+            "source_url_smr": "https://base-donnees-publique.medicaments.gouv.fr/telechargement.php?fichier=CIS_HAS_SMR_bdpm.txt",
+            "source_url_asmr": "https://base-donnees-publique.medicaments.gouv.fr/telechargement.php?fichier=CIS_HAS_ASMR_bdpm.txt"
+        },
+        "storage": {
+            "path": {
+                "pattern": "{domain}/{provider}/{feed}/{feed}_{avis}.csv",
+                "params": {
+                    "avis": "SMR ou ASMR"
+                }
+            },
+            "stores": [
+                "stronghold"
+            ]
+        },
+        "columns": [
+            {
+                "name": "code_cis",
+                "type": "string",
+                "description": "Code CIS"
+            },
+            {
+                "name": "code_dossier_has",
+                "type": "string",
+                "description": "Code de dossier HAS"
+            },
+            {
+                "name": "motif_evaluation",
+                "type": "string",
+                "description": "Motif d'évaluation"
+            },
+            {
+                "name": "date_avis",
+                "type": "date",
+                "description": "Date de l'avis de la Commission de la transparence (format AAAAMMJJ)"
+            },
+            {
+                "name": "valeur_evaluation",
+                "type": "string",
+                "description": "Valeur de l'évaluation"
+            },
+            {
+                "name": "libelle_evaluation",
+                "type": "string",
+                "description": "Libellé de l'évaluation"
+            }
+        ]
+    },
+    "SANTE-groupes_generiques": {
+        "domain": "santé",
+        "provider": "BDPM",
+        "feed": "groupes-génériques",
+        "metadata": {
+            "description": "Il contient l'ensemble groupes génériques, avec les médicaments en faisant partie",
+            "source_url": "https://base-donnees-publique.medicaments.gouv.fr/telechargement.php?fichier=CIS_GENER_bdpm.txt"
+        },
+        "storage": {
+            "path": {
+                "pattern": "{domain}/{provider}/{feed}.csv"
+            },
+            "stores": [
+                "stronghold"
+            ]
+        },
+        "columns": [
+            {
+                "name": "id_groupe",
+                "type": "string",
+                "description": "Identifiant du groupe générique"
+            },
+            {
+                "name": "libelle_groupe",
+                "type": "string",
+                "description": "Libellé du groupe générique"
+            },
+            {
+                "name": "code_cis",
+                "type": "string",
+                "description": "Code CIS"
+            },
+            {
+                "name": "type_generique",
+                "type": "string",
+                "description": "Type de générique, avec les valeurs suivantes\n  0 : « princeps »\n  1 : « générique »\n  2 : « génériques par complémentarité posologique »\n  4 : « générique substituable »\n"
+            },
+            {
+                "name": "numero_tri",
+                "type": "string",
+                "description": "Numéro permettant de trier les éléments d'un groupe"
+            }
+        ]
+    },
+    "SANTE-conditions_prescription": {
+        "domain": "santé",
+        "provider": "BDPM",
+        "feed": "condition-préscription",
+        "metadata": {
+            "description": "Il contient l'ensemble des conditions de prescription et de délivrance associées à un médicament",
+            "source_url": "https://base-donnees-publique.medicaments.gouv.fr/telechargement.php?fichier=CIS_CPD_bdpm.txt"
+        },
+        "storage": {
+            "path": {
+                "pattern": "{domain}/{provider}/{feed}.csv"
+            },
+            "stores": [
+                "stronghold"
+            ]
+        },
+        "columns": [
+            {
+                "name": "code_cis",
+                "type": "string",
+                "description": "Code CIS"
+            },
+            {
+                "name": "condition",
+                "type": "string",
+                "description": "Condition de prescription ou de délivrance"
+            }
+        ]
+    },
+    "SANTE-informations_importantes": {
+        "domain": "santé",
+        "provider": "BDPM",
+        "feed": "informations-importantes",
+        "metadata": {
+            "description": "Il contient l'ensemble des informations importantes disponibles pour les médicaments de la base de données publique des médicaments",
+            "source_url": "https://base-donnees-publique.medicaments.gouv.fr/telechargement.php?fichier=CIS_InfoImportantes.txt"
+        },
+        "storage": {
+            "path": {
+                "pattern": "{domain}/{provider}/{feed}.csv"
+            },
+            "stores": [
+                "stronghold"
+            ]
+        },
+        "columns": [
+            {
+                "name": "code_cis",
+                "type": "string",
+                "description": "Code CIS"
+            },
+            {
+                "name": "date_debut",
+                "type": "date",
+                "description": "Date de début de l'information de sécurité (format JJ/MM/AAAA)"
+            },
+            {
+                "name": "date_fin",
+                "type": "date",
+                "description": "Date de fin de l'information de sécurité (format JJ/MM/AAAA)"
+            },
+            {
+                "name": "texte_information",
+                "type": "string",
+                "description": "Texte à afficher et lien vers l'information de sécurité"
             }
         ]
     }

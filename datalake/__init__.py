@@ -1,18 +1,7 @@
 import importlib
 import requests
-import csv
+from datalake.helpers import StandardDialect, DatasetBuilder
 from datalake.exceptions import DatalakeError, EntryNotFound, StoreNotFound
-
-
-class DatalakeDialect(csv.Dialect):
-    delimiter = ","
-    quotechar = '"'
-    escapechar = None
-    doublequote = True
-    lineterminator = "\n"
-    quoting = csv.QUOTE_MINIMAL
-    skipinitialspace = False
-    strict = True
 
 
 class Datalake:
@@ -36,7 +25,7 @@ class Datalake:
             raise DatalakeError(f"Invalid datalake provider found: {self._provider}")
 
         # Configure CSV dialect
-        self._dialect = DatalakeDialect()
+        self._dialect = StandardDialect()
         self._dialect.delimiter = config["csv_format"]["delimiter"]
         self._dialect.lineterminator = config["csv_format"]["line_break"]
         self._dialect.quotechar = config["csv_format"]["quote_char"]
@@ -143,3 +132,7 @@ class Datalake:
         """
         storage, path = self.get_entry_path_resolved(store, key, path_params, strict=False)
         return storage.keys_iterator(path)
+
+    def new_dataset_builder(self, key, path=None, path_params={}, lang="en_US", date_formats=None):
+        catalog_entry = self.get_entry(key)
+        return DatasetBuilder(self, catalog_entry, path, path_params, lang, date_formats)
