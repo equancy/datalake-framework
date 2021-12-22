@@ -133,6 +133,5 @@ class Datalake:
         storage, path = self.get_entry_path_resolved(store, key, path_params, strict=False)
         return storage.keys_iterator(path)
 
-    def new_dataset_builder(self, key, path=None, path_params={}, lang="en_US", date_formats=None):
-        catalog_entry = self.get_entry(key)
-        return DatasetBuilder(self, catalog_entry, path, path_params, lang, date_formats)
+    def new_dataset_builder(self, key, path=None, path_params={}, lang="en_US", date_formats=None, ciphered=False):
+        return DatasetBuilder(self, key, path, path_params, lang, date_formats, ciphered)

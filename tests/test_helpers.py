@@ -147,9 +147,11 @@ def test_dataset_builder(catalog_url):
         assert "Row has not the expected column count" in str(e.value)
 
     dataset_path = dsb.path
+    assert dsb.row_count == 2
     assert os.path.exists(dataset_path)
     assert checksum(dataset_path) == "603fbc0e5e80b6623c796e7d62e86c01a63145c9d4d07d2a43e5c52cb15ec1c7"
 
+    # Test typing
     (temp_file, temp_path) = mkstemp()
     os.close(temp_file)
     with dl.new_dataset_builder(
@@ -167,5 +169,26 @@ def test_dataset_builder(catalog_url):
         r["column_time"] = "14:5:8"
         r["column_datetime"] = "23/05/2049 14:5:8"
         dsb.add_dict(r)
+    assert dsb.row_count == 1
     assert checksum(temp_path) == "58c985550ad738eca743adfae20dc198fcb995a10ffe0ebf56f38dd2ea963a71"
     os.remove(temp_path)
+
+    # Test typing when dataset is ciphered
+    ciphered_dict = {
+        "column_str": "R2FsaW9waG9iaWEsIEFjYXJvcGhvYmlhLCBBdGhhemFnb3JhcGhvYmlhLCBDbGlub3Bob2JpYQ==",
+        "column_int": "1234567",
+        "column_dec": "MTIzNDU2Ny44OQ==",
+        "column_date": "MjA0OS0wNS0yMw==",
+        "column_time": "14:05:08.000+0000",
+        "column_datetime": "2049-05-23T14:05:08.000+0000",
+    }
+    with dl.new_dataset_builder(key="valid", ciphered=True) as dsb:
+        dsb.add_dict(ciphered_dict)
+    dataset_path = dsb.path
+    assert dsb.row_count == 1
+    assert os.path.exists(dataset_path)
+    assert checksum(dataset_path) == "99601c2e125d3e7729fa0371addbf91336d4c61430e72804cc6160c759eb46ed"
+    with dl.new_dataset_builder(key="valid", ciphered=False) as dsb:
+        with pytest.raises(ValueError) as e:
+            dsb.add_dict(ciphered_dict)
+        assert "Unable to cast" in str(e.value)        

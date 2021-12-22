@@ -18,19 +18,31 @@
         "columns": [
             {
                 "name": "column_str",
-                "type": "string"
+                "type": "string",
+                "gdpr": {
+                    "pii": true
+                }
             },
             {
                 "name": "column_int",
-                "type": "integer"
+                "type": "integer",
+                "gdpr": {
+                    "drop": false
+                }
             },
             {
                 "name": "column_dec",
-                "type": "decimal"
+                "type": "decimal",
+                "gdpr": {
+                    "pii": true
+                }
             },
             {
                 "name": "column_date",
-                "type": "date"
+                "type": "date",
+                "gdpr": {
+                    "pii": true
+                }
             },
             {
                 "name": "column_time",
@@ -38,7 +50,10 @@
             },
             {
                 "name": "column_datetime",
-                "type": "datetime"
+                "type": "datetime",
+                "gdpr": {
+                    "pii": false
+                }
             }
         ]
     },

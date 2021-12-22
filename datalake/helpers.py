@@ -76,11 +76,12 @@ class StandardDialect(csv.Dialect):
 
 
 class DatasetBuilder:
-    def __init__(self, datalake, catalog_entry, path=None, path_params={}, lang="en_US", date_formats=None):
+    def __init__(self, datalake, key, path=None, path_params={}, lang="en_US", date_formats=None, ciphered=False):
         self._datalake = datalake
-        self._catalog_key = catalog_entry["_key"]
-        self._typing = [item["type"] for item in catalog_entry["columns"]]
-        self._header = [item["name"] for item in catalog_entry["columns"]]
+        self._catalog_key = key
+        self._catalog_entry = datalake.get_entry(key)
+        self._typing = [item["type"] for item in self._catalog_entry["columns"]]
+        self._header = [item["name"] for item in self._catalog_entry["columns"]]
         self._managed_path = path is None
         self._path = path if not self._managed_path else self._new_temp_file()
         self._path_params = path_params
@@ -90,6 +91,13 @@ class DatasetBuilder:
             if date_formats is not None
             else [STANDARD_DATE_FORMAT, STANDARD_TIME_FORMAT, STANDARD_DATETIME_FORMAT]
         )
+        self._ciphered = []
+        for item in self._catalog_entry["columns"]:
+            if "gdpr" not in item or "pii" not in item["gdpr"]:
+                self._ciphered.append(False)
+            else:
+                self._ciphered.append(ciphered and item["gdpr"]["pii"])
+        self._row_count = 0
 
     def __del__(self):
         if self._managed_path:
@@ -114,6 +122,10 @@ class DatasetBuilder:
     def path(self):
         return self._path
 
+    @property
+    def row_count(self):
+        return self._row_count
+
     def new_dict(self):
         """
         Returns an empty row dict
@@ -122,6 +134,7 @@ class DatasetBuilder:
 
     def _add(self, row):
         self._writer.writerow(row)
+        self._row_count += 1
 
     def add_dict(self, row):
         """
@@ -143,19 +156,20 @@ class DatasetBuilder:
         typed_row = []
         for idx in range(len(row)):
             typed_value = row[idx]
-            if isinstance(typed_value, str):
-                typed_value = re.sub(r"\s", " ", typed_value).strip()
-            if typed_value is not None and typed_value != "":
-                if self._typing[idx] == "date":
-                    typed_value = cast_date(typed_value, self._date_formats)
-                elif self._typing[idx] == "time":
-                    typed_value = cast_time(typed_value, self._date_formats)
-                elif self._typing[idx] == "datetime":
-                    typed_value = cast_datetime(typed_value, self._date_formats)
-                elif self._typing[idx] in ("number", "decimal"):
-                    typed_value = cast_float(typed_value, self._lang)
-                elif self._typing[idx] == "integer":
-                    typed_value = cast_integer(typed_value, self._lang)
+            if not self._ciphered[idx]:
+                if isinstance(typed_value, str):
+                    typed_value = re.sub(r"\s", " ", typed_value).strip()
+                if typed_value is not None and typed_value != "":
+                    if self._typing[idx] == "date":
+                        typed_value = cast_date(typed_value, self._date_formats)
+                    elif self._typing[idx] == "time":
+                        typed_value = cast_time(typed_value, self._date_formats)
+                    elif self._typing[idx] == "datetime":
+                        typed_value = cast_datetime(typed_value, self._date_formats)
+                    elif self._typing[idx] in ("number", "decimal"):
+                        typed_value = cast_float(typed_value, self._lang)
+                    elif self._typing[idx] == "integer":
+                        typed_value = cast_integer(typed_value, self._lang)
             typed_row.append(typed_value)
         self._add(typed_row)
 
