@@ -3,6 +3,8 @@ from datalake.exceptions import ContainerNotFound
 from hashlib import sha256
 from azure.storage.blob import ContainerClient, ContentSettings
 from azure.core.exceptions import AzureError
+from tempfile import mkstemp
+from os import close, remove
 
 
 class Storage(IStorage):  # pragma: no cover
@@ -53,39 +55,44 @@ class Storage(IStorage):  # pragma: no cover
 
     def download(self, src, dst):
         with open(dst, "wb") as f:
-            stream = self._container.get_blob_client(src).download_blob()
-            stream.readinto(f)
+            self._container.download_blob(src).readinto(f)
 
     def copy(self, src, dst, bucket=None):
         # https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-copy?tabs=python#copy-a-blob
-        
+        pass
 
     def delete(self, key):
         self._container.delete_blob(key)
 
     def move(self, src, dst, bucket=None):
-        """
-        Moves a storage key to another key in the same storage or in another
-        """
-        pass
+        self.copy(src, dst, bucket)
+        self.delete(src)
 
     def put(self, content, dst, content_type="text/csv", encoding="utf-8", metadata={}):
-        """
-        Puts the specified key's content
-        """
-        pass
+        self._container.upload_blob(
+            name=dst,
+            data=content,
+            overwrite=True,
+            metadata=metadata,
+            content_settings=ContentSettings(content_type=content_type, content_encoding=encoding),
+            encoding=encoding,
+        )
 
     def get(self, key):
-        """
-        Returns the content of the specified key
-        """
-        pass
+        blob = self._container.get_blob_client(key)
+        encoding = blob.get_blob_properties().content_settings.content_encoding
+        return blob.download_blob().readall().decode(encoding)
 
     def stream(self, key, encoding="utf-8"):
-        """
-        Returns an iterator on each lines from the specified key
-        """
-        pass
+        (temp_file, temp_path) = mkstemp(prefix=f"datalake-storage_", suffix=".azure")
+        close(temp_file)
+        try:
+            self.download(key, temp_path)
+            with open(temp_path, "r", encoding=encoding) as f:
+                for line in f.readlines():
+                    yield line.replace("\n", "")
+        finally:
+            remove(temp_path)
 
     def size(self, key):
         return self._container.get_blob_client(key).get_blob_properties().size
