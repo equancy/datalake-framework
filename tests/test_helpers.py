@@ -35,6 +35,9 @@ def test_cast_number():
         cast_float("1 23 456", "en")
     assert "Unable to cast number" in str(e.value)
 
+    assert cast_integer(1234567.89) == 1234567
+    assert cast_float(1234567.89) == 1234567.89
+
 
 def test_cast_date():
     assert cast_date("13/02/2009", ["DD/MM/YYYY"]) == "2009-02-13"
@@ -157,7 +160,6 @@ def test_dataset_builder(catalog_url):
     with dl.new_dataset_builder(
         key="valid",
         path=temp_path,
-        path_params={"date": "2049-05-23"},
         lang="fr_FR",
         date_formats=["DD/MM/YYYY", "HH:m:s", "DD/MM/YYYY HH:m:s"],
     ) as dsb:
@@ -191,4 +193,25 @@ def test_dataset_builder(catalog_url):
     with dl.new_dataset_builder(key="valid", ciphered=False) as dsb:
         with pytest.raises(ValueError) as e:
             dsb.add_dict(ciphered_dict)
-        assert "Unable to cast" in str(e.value)        
+        assert "Unable to cast" in str(e.value)
+
+
+def test_dataset_reader(catalog_url):
+    dl = Datalake(catalog_url)
+    dsr = dl.new_dataset_reader("dataset", "STATS-mises_en_cause", {"year": 2019})
+    count = 0
+    for item in dsr.iter_list():
+        count += 1
+        assert len(item) == 4
+        assert type(item[0]) == str
+        assert type(item[1]) == int
+        assert type(item[2]) == int
+        assert type(item[3]) == float
+    assert count == 10
+
+    for item in dsr.iter_dict():
+        assert "intitule" in item
+        if item["intitule"] == "Cambriolages":
+            assert item["pct_mineurs"] == 30
+            assert item["pct_femmes"] == 9
+            assert item["ensemble"] == 19.3

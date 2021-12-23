@@ -12,6 +12,8 @@ STANDARD_DATETIME_FORMAT = "YYYY-MM-DDTHH:mm:ss.SSSZZ"
 
 
 def _to_decimal(x, lang):
+    if type(x) in (int, float):
+        return x
     l = Locale.parse(lang)
     separator = l.number_symbols["decimal"]
     group = l.number_symbols["group"]
@@ -37,7 +39,7 @@ def cast_float(x, lang="en_US"):
     return float(_to_decimal(x, lang))
 
 
-def cast_date(d, formats):
+def cast_date(d, formats=[STANDARD_DATE_FORMAT]):
     for f in formats:
         try:
             return _to_date(d, f).format(STANDARD_DATE_FORMAT)
@@ -46,7 +48,7 @@ def cast_date(d, formats):
     raise ValueError(f"Wrong date format '{d}'")
 
 
-def cast_time(d, formats):
+def cast_time(d, formats=[STANDARD_TIME_FORMAT]):
     for f in formats:
         try:
             return _to_date(d, f).format(STANDARD_TIME_FORMAT)
@@ -55,7 +57,7 @@ def cast_time(d, formats):
     raise ValueError(f"Wrong time format '{d}'")
 
 
-def cast_datetime(d, formats):
+def cast_datetime(d, formats=[STANDARD_DATETIME_FORMAT]):
     for f in formats:
         try:
             return _to_date(d, f).format(STANDARD_DATETIME_FORMAT)
@@ -76,7 +78,7 @@ class StandardDialect(csv.Dialect):
 
 
 class DatasetBuilder:
-    def __init__(self, datalake, key, path=None, path_params={}, lang="en_US", date_formats=None, ciphered=False):
+    def __init__(self, datalake, key, path=None, lang="en_US", date_formats=None, ciphered=False):
         self._datalake = datalake
         self._catalog_key = key
         self._catalog_entry = datalake.get_entry(key)
@@ -84,7 +86,6 @@ class DatasetBuilder:
         self._header = [item["name"] for item in self._catalog_entry["columns"]]
         self._managed_path = path is None
         self._path = path if not self._managed_path else self._new_temp_file()
-        self._path_params = path_params
         self._lang = lang
         self._date_formats = (
             date_formats
@@ -173,13 +174,41 @@ class DatasetBuilder:
             typed_row.append(typed_value)
         self._add(typed_row)
 
-    def upload(self, store, metadata={}):
-        return self._datalake.upload(
-            self._path,
-            store,
-            self._catalog_key,
-            self._path_params,
-            content_type="text/csv",
-            encoding="utf-8",
-            metadata={**metadata, **self._path_params},
-        )
+
+class DatasetReader:
+    def __init__(self, datalake, store, key, path_params=None, ciphered=False):
+        self._datalake = datalake
+        self._storage, self._path = self._datalake.get_entry_path_resolved(store, key, path_params, strict=True)
+        self._catalog_key = key
+        self._catalog_entry = datalake.get_entry(key)
+        self._typing = [item["type"] for item in self._catalog_entry["columns"]]
+        self._header = [item["name"] for item in self._catalog_entry["columns"]]
+        self._ciphered = []
+        for item in self._catalog_entry["columns"]:
+            if "gdpr" not in item or "pii" not in item["gdpr"]:
+                self._ciphered.append(False)
+            else:
+                self._ciphered.append(ciphered and item["gdpr"]["pii"])
+
+    def iter_list(self):
+        reader = csv.reader(self._storage.stream(self._path), self._datalake.csv_dialect)
+        row_count = 0
+        for row in reader:
+            row_count += 1
+            if row_count <= 1:
+                continue
+            typed_row = []
+            for idx in range(len(row)):
+                typed_value = row[idx]
+                if not self._ciphered[idx]:
+                    if typed_value is not None and typed_value != "":
+                        if self._typing[idx] in ("number", "decimal"):
+                            typed_value = cast_float(typed_value)
+                        elif self._typing[idx] == "integer":
+                            typed_value = cast_integer(typed_value)
+                typed_row.append(typed_value)
+            yield typed_row
+
+    def iter_dict(self):
+        for row in self.iter_list():
+            yield {self._header[idx]: value for idx, value in enumerate(row)}

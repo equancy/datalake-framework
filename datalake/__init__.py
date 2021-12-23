@@ -1,6 +1,6 @@
 import importlib
 import requests
-from datalake.helpers import StandardDialect, DatasetBuilder
+from datalake.helpers import StandardDialect, DatasetBuilder, DatasetReader
 from datalake.exceptions import DatalakeError, EntryNotFound, StoreNotFound
 
 
@@ -133,5 +133,8 @@ class Datalake:
         storage, path = self.get_entry_path_resolved(store, key, path_params, strict=False)
         return storage.keys_iterator(path)
 
-    def new_dataset_builder(self, key, path=None, path_params={}, lang="en_US", date_formats=None, ciphered=False):
-        return DatasetBuilder(self, key, path, path_params, lang, date_formats, ciphered)
+    def new_dataset_builder(self, key, path=None, lang="en_US", date_formats=None, ciphered=False):
+        return DatasetBuilder(self, key, path, lang, date_formats, ciphered)
+
+    def new_dataset_reader(self, store, key, path_params=None):
+        return DatasetReader(self, store, key, path_params)

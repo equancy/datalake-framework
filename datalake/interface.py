@@ -105,6 +105,7 @@ class IStorage(ABC):  # pragma: no cover
         """
         pass
 
+
 class IStorageEvent(ABC):  # pragma: no cover
     """
     Storage event callback interface
@@ -116,3 +117,11 @@ class IStorageEvent(ABC):  # pragma: no cover
         Callback method for handling an object
         """
         pass
+
+
+class ISecret(ABC):  # pragma: no cover
+    """
+    Secret interface
+    """
+
+    pass

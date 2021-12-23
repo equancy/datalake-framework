@@ -18,5 +18,8 @@
     "pseudonymized": {
         "bucket": "data-bucket",
         "prefix": "pseudonymized"
+    },
+    "dataset": {
+        "bucket": "./tests/dataset"
     }
 }

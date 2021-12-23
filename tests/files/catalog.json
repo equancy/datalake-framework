@@ -495,5 +495,47 @@
                 "description": "Texte à afficher et lien vers l'information de sécurité"
             }
         ]
+    },
+    "STATS-mises_en_cause": {
+        "domain": "stats",
+        "provider": "INSEE",
+        "feed": "mises-en-cause",
+        "metadata": {
+            "description": "Personnes mises en cause pour des crimes ou délits non routiers",
+            "source_url": "https://www.insee.fr/fr/statistiques/5232504"
+        },
+        "storage": {
+            "path": {
+                "pattern": "{domain}/{provider}/{feed}/{feed}_{year}.csv",
+                "params": {
+                    "year": "AAAA"
+                }
+            },
+            "stores": [
+                "dataset"
+            ]
+        },
+        "columns": [
+            {
+                "name": "intitule",
+                "type": "string",
+                "description": "Intitulé"
+            },
+            {
+                "name": "pct_mineurs",
+                "type": "integer",
+                "description": "Part des mineurs (en %)"
+            },
+            {
+                "name": "pct_femmes",
+                "type": "integer",
+                "description": "Part des femmes (en %)"
+            },
+            {
+                "name": "ensemble",
+                "type": "decimal",
+                "description": "Ensemble (en milliers)"
+            }
+        ]
     }
 }
