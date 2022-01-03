@@ -1,6 +1,6 @@
 import pytest
-from tests.storage import *
-from datalake.provider.aws import Storage
+from tests.providers.storage import *
+from datalake.provider.gcp import Storage
 
 
 @pytest.fixture

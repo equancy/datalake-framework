@@ -1,5 +1,5 @@
 import pytest
-from tests.storage import *
+from tests.providers.storage import *
 from datalake.provider.azure import Storage
 from datalake.exceptions import ContainerNotFound
 

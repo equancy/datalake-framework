@@ -2,7 +2,7 @@ import os
 import shutil
 import tempfile
 import pytest
-from tests.storage import *
+from tests.providers.storage import *
 from datalake.provider.local import Storage
 
 

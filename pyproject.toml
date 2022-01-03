@@ -11,16 +11,19 @@ version = "0.0.0-alpha.7"
 
 [tool.poetry.dependencies]
 Babel = "^2.9.1"
+azure-identity = "^1.7.1"
+azure-keyvault-secrets = "^4.3.0"
 azure-storage-blob = "^12.9.0"
-boto3 = "^1.20.16"
+boto3 = "^1.20.26"
 google-cloud-pubsub = "^2.9.0"
+google-cloud-secret-manager = "^2.8.0"
 google-cloud-storage = "^1.43.0"
 pendulum = "^2.1.2"
 python = "^3.8"
 requests = "^2.26.0"
 
 [tool.poetry.dev-dependencies]
-black = "^21.9b0"
+black = "^21.12b0"
 coverage = "^6.2"
 flake9 = "^3.8.3"
 pytest = "^6.2.5"
@@ -40,7 +43,7 @@ requires = ["poetry-core>=1.0.0"]
 ignore = "E501,W503"
 
 [tool.pytest.ini_options]
-addopts = "-ra -v --no-header"
+addopts = "-ra -v --no-header --ignore tests/providers/azure/"
 filterwarnings = [
   # see https://github.com/googleapis/python-api-common-protos/issues/23
   "ignore:Call to deprecated create function FieldDescriptor",

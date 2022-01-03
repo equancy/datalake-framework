@@ -1,6 +1,6 @@
 import pytest
 import os
-from tests.fixtures import *
+from tests import *
 from tempfile import mkstemp
 from decimal import InvalidOperation
 from datalake import Datalake

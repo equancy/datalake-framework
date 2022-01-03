@@ -1,7 +1,10 @@
-from datalake.interface import IStorage, IStorageEvent
+from datalake.interface import IStorage, IStorageEvent, ISecret
 from datalake.exceptions import ContainerNotFound
+import json
 from hashlib import sha256
+from azure.identity import DefaultAzureCredential
 from azure.storage.blob import ContainerClient, ContentSettings
+from azure.keyvault.secrets import SecretClient
 from azure.core.exceptions import AzureError
 from tempfile import mkstemp
 from os import close, remove
@@ -96,3 +99,29 @@ class Storage(IStorage):  # pragma: no cover
 
     def size(self, key):
         return self._container.get_blob_client(key).get_blob_properties().size
+
+
+class Secret(ISecret):
+    def __init__(self, name):
+        name_parts = name.split(".")
+        if len(name_parts) != 2:
+            raise ValueError(f"Wrong secret name format '{name}'")
+        key_vault = name_parts[0]
+        secret_name = name_parts[1]
+        try:
+            secret_client = SecretClient(
+                vault_url=f"https://{key_vault}.vault.azure.net/",
+                credential=DefaultAzureCredential(),
+            )
+            secret = secret_client.get_secret(secret_name)
+            self._secret = secret.value
+        except AzureError:
+            raise ValueError(f"Secret {name} doesn't exist or you don't have permissions to access it")
+
+    @property
+    def plain(self):
+        return self._secret
+
+    @property
+    def json(self):
+        return json.loads(self._secret)

@@ -1,10 +1,12 @@
-from datalake.interface import IStorage, IStorageEvent
+from datalake.interface import IStorage, IStorageEvent, ISecret
 import hashlib
 import json
 import google.auth
 import google.cloud.exceptions
 from google.cloud import storage as google_storage
 from google.cloud import pubsub
+from google.cloud import secretmanager
+import google.api_core.exceptions
 
 
 class Storage(IStorage):
@@ -157,3 +159,23 @@ class StorageNotifications:  # pragma: no cover
         name = event["name"]
 
         self._processor.process(Storage(bucket), name)
+
+
+class Secret(ISecret):
+    def __init__(self, name):
+        _, project_id = google.auth.default()
+        client = secretmanager.SecretManagerServiceClient()
+        secret_id = f"projects/{project_id}/secrets/{name}/versions/latest"
+        try:
+            response = client.access_secret_version(request={"name": secret_id})
+            self._secret = response.payload.data.decode("UTF-8")
+        except google.api_core.exceptions.NotFound:
+            raise ValueError(f"Secret {name} doesn't exist or you don't have permissions to access it")
+
+    @property
+    def plain(self):
+        return self._secret
+
+    @property
+    def json(self):
+        return json.loads(self._secret)

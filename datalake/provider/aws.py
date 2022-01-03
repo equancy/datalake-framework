@@ -1,8 +1,9 @@
 from urllib.parse import unquote_plus
+import json
 import hashlib
 import boto3
 import botocore
-from datalake.interface import IStorage, IStorageEvent
+from datalake.interface import IStorage, IStorageEvent, ISecret
 
 
 class Storage(IStorage):
@@ -153,3 +154,23 @@ class StorageEvents:  # pragma: no cover
         key = unquote_plus(record["s3"]["object"]["key"])
 
         self._processor.process(Storage(bucket), key)
+
+
+class Secret(ISecret):
+    def __init__(self, name):
+        client = boto3.client("secretsmanager")
+        try:
+            secret = client.get_secret_value(SecretId=name)
+            if "SecretString" not in secret:
+                raise ValueError("Unsupported secret format '{name}'")
+            self._secret = secret["SecretString"]
+        except botocore.exceptions.ClientError:
+            raise ValueError(f"Secret {name} doesn't exist or you don't have permissions to access it")
+
+    @property
+    def plain(self):
+        return self._secret
+
+    @property
+    def json(self):
+        return json.loads(self._secret)

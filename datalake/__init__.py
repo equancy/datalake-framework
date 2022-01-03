@@ -138,3 +138,9 @@ class Datalake:
 
     def new_dataset_reader(self, store, key, path_params=None):
         return DatasetReader(self, store, key, path_params)
+
+    def get_secret(self, name):
+        """
+        Return a secret from right provider
+        """
+        return self._provider_module.Secret(bucket)

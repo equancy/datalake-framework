@@ -124,4 +124,18 @@ class ISecret(ABC):  # pragma: no cover
     Secret interface
     """
 
-    pass
+    @property
+    @abstractmethod
+    def plain(self):
+        """
+        Return the plain secret
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def json(self):
+        """
+        Return the secret as a dict
+        """
+        pass

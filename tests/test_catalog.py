@@ -2,7 +2,7 @@ import pytest
 import requests
 import shutil
 import tempfile
-from tests.fixtures import *
+from tests import *
 from datalake import Datalake
 from datalake.provider.local import Storage
 import datalake.exceptions
