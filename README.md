@@ -4,7 +4,7 @@
 
 Storage objects can be manipulated with an implementation of `AbstractStorage`.
 
-> Currently AWS and GCP are supported
+> Currently AWS, Azure and GCP are supported
 
 ```python
 from datalake.provider.aws import Storage

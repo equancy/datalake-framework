@@ -1,5 +1,5 @@
 from datalake.interface import IStorage, IStorageEvent, ISecret
-from datalake.exceptions import ContainerNotFound
+from datalake.exceptions import ContainerNotFound, DatalakeError
 import json
 from hashlib import sha256
 from azure.identity import DefaultAzureCredential
@@ -11,29 +11,35 @@ from os import close, remove
 
 
 class Storage(IStorage):  # pragma: no cover
-    def __init__(self, name):
-        name_parts = name.split(".")
-        if len(name_parts) != 2:
-            raise ValueError(f"Wrong storage name format '{name}'")
-        account = name_parts[0]
-        container = name_parts[1]
+    def __init__(self, bucket):
+        container_url = self._bucket_to_container_url(bucket)
         try:
-            self._container = ContainerClient(
-                account_url=f"https://{account}.blob.core.windows.net/",
-                container_name=container,
+            self._container = ContainerClient.from_container_url(
+                container_url=container_url,
                 credential=DefaultAzureCredential(),
             )
             if not self._container.exists():
-                raise ContainerNotFound(f"Container {name} doesn't exist")
+                raise ContainerNotFound(f"Container {bucket} doesn't exist")
         except AzureError as e:
-            raise ContainerNotFound(f"Container {name} doesn't exist or you don't have permissions to access it ({str(e)})")
+            raise ContainerNotFound(
+                f"Container {bucket} doesn't exist or you don't have permissions to access it ({str(e)})"
+            )
+
+    def _bucket_to_container_url(self, bucket):
+        self._name = bucket
+        bucket_parts = bucket.split(".")
+        if len(bucket_parts) != 2:
+            raise ValueError(f"Wrong bucket name format '{bucket}'")
+        account = bucket_parts[0]
+        container = bucket_parts[1]
+        return f"https://{account}.blob.core.windows.net/{container}"
 
     def __repr__(self):  # pragma: no cover
         return self._container.url
 
     @property
     def name(self):
-        return self._container.url
+        return self._name
 
     def exists(self, key):
         return self._container.get_blob_client(key).exists()
@@ -69,8 +75,18 @@ class Storage(IStorage):  # pragma: no cover
             self._container.download_blob(src).readinto(f)
 
     def copy(self, src, dst, bucket=None):
-        # https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-copy?tabs=python#copy-a-blob
-        pass
+        # if you wonder why this seems so overcomplicated, feel free to ask Microsoft
+        # https://docs.microsoft.com/en-us/python/api/azure-storage-blob/azure.storage.blob.blobclient?view=azure-python#start-copy-from-url-source-url--metadata-none--incremental-copy-false----kwargs-
+        creds = DefaultAzureCredential()
+        dest_container_url = self._container.url if bucket is None else self._bucket_to_container_url(bucket)
+        dest_container = ContainerClient.from_container_url(container_url=dest_container_url, credential=creds)
+        dest_blob = dest_container.get_blob_client(dst)
+        source_blob = f"{self._container.url}/{src}"
+        
+        token = creds.get_token("https://storage.azure.com/.default").token
+        response = dest_blob.start_copy_from_url(source_blob, requires_sync=True, source_authorization=f"Bearer {token}")
+        if response["copy_status"] != "success":
+            raise DatalakeError(f"Azure blob copy failed (ID '{response['copy_id']}')")
 
     def delete(self, key):
         self._container.delete_blob(key)
