@@ -13,13 +13,11 @@ from os import close, remove
 class Storage(IStorage):  # pragma: no cover
     def __init__(self, bucket):
         try:
-            self._container = ContainerClient.from_container_url(
-                bucket, credential="nbFKOQZFQa96gLZ0DE0PLC9zGOiUdhIKHyjASVePhrtwPpjnCRkRIduHn4dVbQCWjP5yOKaWU1xxg3/Q8LzYXA=="
-            )
+            self._container = ContainerClient.from_container_url(bucket, credential=DefaultAzureCredential())
             if not self._container.exists():
                 raise ContainerNotFound(f"Container {bucket} doesn't exist")
-        except AzureError:
-            raise ContainerNotFound(f"Container {bucket} doesn't exist or you don't have permissions to access it")
+        except AzureError as e:
+            raise ContainerNotFound(f"Container {bucket} doesn't exist or you don't have permissions to access it ({str(e)})")
 
     def __repr__(self):  # pragma: no cover
         return self._container.url
@@ -115,8 +113,8 @@ class Secret(ISecret):
             )
             secret = secret_client.get_secret(secret_name)
             self._secret = secret.value
-        except AzureError:
-            raise ValueError(f"Secret {name} doesn't exist or you don't have permissions to access it")
+        except AzureError as e:
+            raise ValueError(f"Secret {name} doesn't exist or you don't have permissions to access it ({str(e)})")
 
     @property
     def plain(self):

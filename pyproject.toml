@@ -45,7 +45,7 @@ requires = ["poetry-core>=1.0.0"]
 ignore = "E501,W503"
 
 [tool.pytest.ini_options]
-addopts = "-ra -v --no-header --ignore tests/providers/azure/"
+addopts = "-ra -v --no-header"
 filterwarnings = [
   # see https://github.com/googleapis/python-api-common-protos/issues/23
   "ignore:Call to deprecated create function FieldDescriptor",
