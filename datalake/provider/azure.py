@@ -11,13 +11,22 @@ from os import close, remove
 
 
 class Storage(IStorage):  # pragma: no cover
-    def __init__(self, bucket):
+    def __init__(self, name):
+        name_parts = name.split(".")
+        if len(name_parts) != 2:
+            raise ValueError(f"Wrong storage name format '{name}'")
+        account = name_parts[0]
+        container = name_parts[1]
         try:
-            self._container = ContainerClient.from_container_url(bucket, credential=DefaultAzureCredential())
+            self._container = ContainerClient(
+                account_url=f"https://{account}.blob.core.windows.net/",
+                container_name=container,
+                credential=DefaultAzureCredential(),
+            )
             if not self._container.exists():
-                raise ContainerNotFound(f"Container {bucket} doesn't exist")
+                raise ContainerNotFound(f"Container {name} doesn't exist")
         except AzureError as e:
-            raise ContainerNotFound(f"Container {bucket} doesn't exist or you don't have permissions to access it ({str(e)})")
+            raise ContainerNotFound(f"Container {name} doesn't exist or you don't have permissions to access it ({str(e)})")
 
     def __repr__(self):  # pragma: no cover
         return self._container.url
@@ -37,7 +46,8 @@ class Storage(IStorage):  # pragma: no cover
         return m.hexdigest()
 
     def is_folder(self, key):
-        return False
+        metadata = self._container.get_blob_client(key).get_blob_properties().metadata
+        return "hdi_isfolder" in metadata and metadata["hdi_isfolder"]
 
     def keys_iterator(self, prefix):
         for blob in self._container.list_blobs(name_starts_with=prefix):
