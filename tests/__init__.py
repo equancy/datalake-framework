@@ -2,6 +2,7 @@ import os
 import json
 import pytest
 import requests
+from datalake import Datalake
 
 
 @pytest.fixture(scope="module")
@@ -16,3 +17,13 @@ def catalog_url():
     with open("tests/files/catalog.json", "r") as f:
         requests.post(f"{url}/catalog/import?truncate", headers=authorization, json=json.load(f))
     return url
+
+
+@pytest.fixture(scope="module")
+def datalake_config(catalog_url):
+    return {"catalog_url": catalog_url, "monitoring": {"class": "NoMonitor", "params": {"quiet": False}}}
+
+
+@pytest.fixture(scope="module")
+def datalake_instance(datalake_config):
+    return Datalake(datalake_config)

@@ -117,9 +117,8 @@ def test_cast_datetime():
     assert "Wrong datetime format" in str(e.value)
 
 
-def test_dataset_builder(catalog_url):
-    dl = Datalake(catalog_url)
-    with dl.new_dataset_builder("SANTE-compositions") as dsb:
+def test_dataset_builder(datalake_instance):
+    with datalake_instance.new_dataset_builder("SANTE-compositions") as dsb:
         dsb.add_sequence(["60493619", "comprimé", "00005", "ACIDE ACÉTYLSALICYLIQUE", "500,00 mg", "un comprimé", "SA", "1"])
         dsb.add_dict(
             {
@@ -157,7 +156,7 @@ def test_dataset_builder(catalog_url):
     # Test typing
     (temp_file, temp_path) = mkstemp()
     os.close(temp_file)
-    with dl.new_dataset_builder(
+    with datalake_instance.new_dataset_builder(
         key="valid",
         path=temp_path,
         lang="fr_FR",
@@ -184,21 +183,20 @@ def test_dataset_builder(catalog_url):
         "column_time": "14:05:08.000+0000",
         "column_datetime": "2049-05-23T14:05:08.000+0000",
     }
-    with dl.new_dataset_builder(key="valid", ciphered=True) as dsb:
+    with datalake_instance.new_dataset_builder(key="valid", ciphered=True) as dsb:
         dsb.add_dict(ciphered_dict)
     dataset_path = dsb.path
     assert dsb.row_count == 1
     assert os.path.exists(dataset_path)
     assert checksum(dataset_path) == "99601c2e125d3e7729fa0371addbf91336d4c61430e72804cc6160c759eb46ed"
-    with dl.new_dataset_builder(key="valid", ciphered=False) as dsb:
+    with datalake_instance.new_dataset_builder(key="valid", ciphered=False) as dsb:
         with pytest.raises(ValueError) as e:
             dsb.add_dict(ciphered_dict)
         assert "Unable to cast" in str(e.value)
 
 
-def test_dataset_reader(catalog_url):
-    dl = Datalake(catalog_url)
-    dsr = dl.new_dataset_reader("dataset", "STATS-mises_en_cause", {"year": 2019})
+def test_dataset_reader(datalake_instance):
+    dsr = datalake_instance.new_dataset_reader("dataset", "STATS-mises_en_cause", {"year": 2019})
     count = 0
     for item in dsr.iter_list():
         count += 1

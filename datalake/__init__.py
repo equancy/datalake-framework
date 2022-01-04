@@ -1,7 +1,9 @@
-import importlib
+import inspect
+from importlib import import_module
 import requests
 from datalake.helpers import StandardDialect, DatasetBuilder, DatasetReader
-from datalake.exceptions import DatalakeError, EntryNotFound, StoreNotFound
+from datalake.interface import IMonitor
+from datalake.exceptions import *
 
 
 class Datalake:
@@ -9,34 +11,84 @@ class Datalake:
     Main class for dealing with datacatalog and storage
     """
 
-    def __init__(self, catalog_url):
-        self._catalog_url = catalog_url
-        config = self._call_catalog("configuration")
+    def __init__(self, config={}):
+        if not isinstance(config, dict):
+            raise BadConfiguration("Datalake configuration must be a dict")
+
+        datalake_config = {
+            "catalog_url": "http://localhost:8080",
+            "monitoring": {
+                "class": "NoMonitor",
+                "params": {},
+            },
+        }
+        datalake_config.update(config)
+        self._catalog_url = datalake_config["catalog_url"]
+        try:
+            catalog_config = self._call_catalog("configuration")
+        except Exception as e:
+            raise BadConfiguration(f"catalog URL is invalid ({str(e)})")
+
+        self._find_monitor_class(datalake_config["monitoring"])
 
         # Configure Cloud provider
-        self._provider = config["provider"]
+        self._provider = catalog_config["provider"]
         if self._provider == "aws":  # pragma: no cover
-            self._provider_module = importlib.import_module("datalake.provider.aws")
+            self._provider_module = import_module("datalake.provider.aws")
         elif self._provider == "gcp":  # pragma: no cover
-            self._provider_module = importlib.import_module("datalake.provider.gcp")
+            self._provider_module = import_module("datalake.provider.gcp")
+        elif self._provider == "azure":  # pragma: no cover
+            self._provider_module = import_module("datalake.provider.azure")
         elif self._provider == "local":
-            self._provider_module = importlib.import_module("datalake.provider.local")
+            self._provider_module = import_module("datalake.provider.local")
         else:  # pragma: no cover
             raise DatalakeError(f"Invalid datalake provider found: {self._provider}")
 
         # Configure CSV dialect
         self._dialect = StandardDialect()
-        self._dialect.delimiter = config["csv_format"]["delimiter"]
-        self._dialect.lineterminator = config["csv_format"]["line_break"]
-        self._dialect.quotechar = config["csv_format"]["quote_char"]
-        self._dialect.doublequote = config["csv_format"]["double_quote"]
-        escape_char = config["csv_format"]["escape_char"]
+        self._dialect.delimiter = catalog_config["csv_format"]["delimiter"]
+        self._dialect.lineterminator = catalog_config["csv_format"]["line_break"]
+        self._dialect.quotechar = catalog_config["csv_format"]["quote_char"]
+        self._dialect.doublequote = catalog_config["csv_format"]["double_quote"]
+        escape_char = catalog_config["csv_format"]["escape_char"]
         self._dialect.escapechar = None if escape_char == "" else escape_char
 
     def _call_catalog(self, endpoint, params=None):
         response = requests.get(f"{self._catalog_url}/{endpoint}", params=params)
         response.raise_for_status()
         return response.json()
+
+    def _find_monitor_class(self, config):
+        if not isinstance(config, dict):
+            raise BadConfiguration("Monitoring configuration must be a dict")
+
+        monitor_split = config["class"].split(".")
+        if len(monitor_split) > 1:
+            class_name = monitor_split[-1]
+            module_name = ".".join(monitor_split[:-1])
+        else:
+            class_name = monitor_split[0]
+            module_name = "datalake.telemetry"
+
+        try:
+            module = import_module(module_name)
+        except ModuleNotFoundError:
+            raise BadConfiguration(f"'{module_name}' Monitor module cannot be found")
+
+        monitor_class = None
+        for n, c in inspect.getmembers(module, inspect.isclass):
+            if n.lower() == class_name.lower():
+                monitor_class = c
+                break
+        if monitor_class is None:
+            raise BadConfiguration(f"'{class_name}' Monitor class cannot be found in module {module_name}")
+        if not issubclass(c, IMonitor):
+            raise BadConfiguration(f"'{class_name}' Monitor class is not a subclass for IMonitor")
+
+        try:
+            self._monitor = c(**config["params"])
+        except Exception as e:
+            raise BadConfiguration(f"'{class_name}' Monitor class cannot be instanciated: {str(e)}")
 
     @property
     def provider(self):
@@ -45,6 +97,13 @@ class Datalake:
     @property
     def csv_dialect(self):
         return self._dialect
+
+    @property
+    def monitor(self):
+        """
+        Return the monitoring instance
+        """
+        return self._monitor
 
     def get_storage(self, bucket):
         """
@@ -111,7 +170,9 @@ class Datalake:
         bucket, resolved, _ = self.resolve_path(store, path)
         return self.get_storage(bucket), resolved
 
-    def upload(self, filepath, store, key, path_params=None, content_type="text/plain", encoding="utf-8", metadata={}):
+    def upload(
+        self, filepath, store, key, path_params=None, content_type="text/plain", encoding="utf-8", metadata={}
+    ):  # pragma: no cover
         """
         Uploads a local file in a store as the specified catalog entry
         """
@@ -119,14 +180,14 @@ class Datalake:
         storage.upload(filepath, path, content_type, encoding, metadata)
         return path
 
-    def download(self, store, key, filepath, path_params=None):
+    def download(self, store, key, filepath, path_params=None):  # pragma: no cover
         """
         Downloads the specified catalog entry from a store to a local file
         """
         storage, path = self.get_entry_path_resolved(store, key, path_params, strict=True)
         storage.download(path, filepath)
 
-    def list_entry_files(self, store, key, path_params=None):
+    def list_entry_files(self, store, key, path_params=None):  # pragma: no cover
         """
         Returns the list of files in a store for the specified catalog entry
         """

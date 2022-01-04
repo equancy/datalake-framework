@@ -1,4 +1,4 @@
-from datalake.interface import IStorage, IStorageEvent, ISecret
+from datalake.interface import IStorage, IStorageEvent, ISecret, IMonitor
 import hashlib
 import json
 import google.auth
@@ -6,6 +6,7 @@ import google.cloud.exceptions
 from google.cloud import storage as google_storage
 from google.cloud import pubsub
 from google.cloud import secretmanager
+from google.cloud import monitoring_v3
 import google.api_core.exceptions
 
 
@@ -179,3 +180,27 @@ class Secret(ISecret):
     @property
     def json(self):
         return json.loads(self._secret)
+
+
+class GoogleMonitor(IMonitor):  # pragma: no cover
+    """
+    Monitoring with Google Cloud Monitoring
+    """
+
+    def __init__(self, project_id):
+        self._client = monitoring_v3.MetricServiceClient()
+        self._project_name = f"projects/{project_id}"
+
+    def push_metric(self, metric):
+        interval = monitoring_v3.TimeInterval({"end_time": {"seconds": metric.start_time.int_timestamp, "nanos": 0}})
+        for field, value in metric.measures.items():
+            series = monitoring_v3.TimeSeries()
+            series.metric.type = f"custom.googleapis.com/datalake/{metric.name}/{field}"
+            series.resource.type = "global"
+            point = monitoring_v3.Point({"interval": interval, "value": {"double_value": value}})
+            series.points = [point]
+
+            for label, value in metric.labels.items():
+                series.metric.labels[label] = value
+
+            self._client.create_time_series(name=self._project_name, time_series=[series])

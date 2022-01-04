@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from logging import getLogger
 
 
 class IStorage(ABC):  # pragma: no cover
@@ -137,5 +138,28 @@ class ISecret(ABC):  # pragma: no cover
     def json(self):
         """
         Return the secret as a dict
+        """
+        pass
+
+
+class IMonitor(ABC):  # pragma: no cover
+    """
+    Monitoring interface
+    """
+
+    def safe_push(self, measurement):
+        """
+        Sends a measurement safely without disrupting the main program
+        """
+        logger = getLogger(__name__)
+        try:
+            self.push_measurement(measurement)
+        except Exception as e:
+            logger.warning(f"An error occured whilst pushing a measurement: {str(e)}")
+
+    @abstractmethod
+    def push(self, measurement):
+        """
+        Sends a measurement to the TSDB backend
         """
         pass
