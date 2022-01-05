@@ -2,16 +2,19 @@ from datalake.interface import IStorage, IStorageEvent, ISecret
 from datalake.exceptions import ContainerNotFound, DatalakeError
 import json
 from hashlib import sha256
+from os import close, remove
+from tempfile import mkstemp
+from urllib.parse import urlparse
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import ContainerClient, ContentSettings
 from azure.keyvault.secrets import SecretClient
+from azure.eventhub import EventHubConsumerClient
 from azure.core.exceptions import AzureError
-from tempfile import mkstemp
-from os import close, remove
 
 
 class Storage(IStorage):
     def __init__(self, bucket):
+        self._name = bucket
         container_url = self._bucket_to_container_url(bucket)
         try:
             self._container = ContainerClient.from_container_url(
@@ -26,7 +29,6 @@ class Storage(IStorage):
             )
 
     def _bucket_to_container_url(self, bucket):
-        self._name = bucket
         bucket_parts = bucket.split(".")
         if len(bucket_parts) != 2:
             raise ValueError(f"Wrong bucket name format '{bucket}'")
@@ -82,10 +84,10 @@ class Storage(IStorage):
         dest_container = ContainerClient.from_container_url(container_url=dest_container_url, credential=creds)
         dest_blob = dest_container.get_blob_client(dst)
         source_blob = f"{self._container.url}/{src}"
-        
+
         token = creds.get_token("https://storage.azure.com/.default").token
         response = dest_blob.start_copy_from_url(source_blob, requires_sync=True, source_authorization=f"Bearer {token}")
-        if response["copy_status"] != "success":
+        if response["copy_status"] != "success":  # pragma: no cover
             raise DatalakeError(f"Azure blob copy failed (ID '{response['copy_id']}')")
 
     def delete(self, key):
@@ -149,3 +151,51 @@ class Secret(ISecret):
     @property
     def json(self):
         return json.loads(self._secret)
+
+
+class StorageEvents:  # pragma: no cover
+    def __init__(self, name, processor, consumer_group="$Default"):
+        name_parts = name.split(".")
+        if len(name_parts) != 2:
+            raise ValueError(f"Wrong EventHub name format '{name}'")
+        namespace = name_parts[0]
+        eventhub = name_parts[1]
+
+        if not isinstance(processor, IStorageEvent):
+            raise ValueError("The event processor is not from the correct class")
+        self._processor = processor
+
+        self._client = EventHubConsumerClient(
+            fully_qualified_namespace=f"{namespace}.servicebus.windows.net",
+            eventhub_name=eventhub,
+            consumer_group=consumer_group,
+            credential=DefaultAzureCredential(),
+        )
+
+    def daemon(self):
+        def callback(partition_context, event):
+            try:
+                self._preprocess(event)
+            finally:
+                partition_context.update_checkpoint(event)
+
+        with self._client:
+            self._client.receive(on_event=callback)
+
+    def _preprocess(self, event):
+        try:
+            event_body = event.body_as_json()[0]
+        except Exception:
+            return
+
+        # check the message is a storage event
+        # see https://docs.microsoft.com/en-us/azure/event-grid/event-schema-blob-storage?tabs=event-grid-event-schema#event-properties
+        if not event_body["eventType"].startswith("Microsoft.Storage."):
+            return
+
+        url_parts = urlparse(event_body["data"]["url"])
+        account = url_parts.hostname.split(".")[0]
+        container = url_parts.path.split("/")[1]
+        blob_name = "/".join(p.path.split("/")[2:])
+
+        self._processor.process(Storage(f"{account_name}.{container_name}"), blob_name)
