@@ -10,7 +10,7 @@ from tempfile import mkstemp
 from os import close, remove
 
 
-class Storage(IStorage):  # pragma: no cover
+class Storage(IStorage):
     def __init__(self, bucket):
         container_url = self._bucket_to_container_url(bucket)
         try:

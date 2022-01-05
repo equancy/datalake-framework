@@ -1,4 +1,5 @@
-from datalake.interface import IStorage
+from datalake.interface import IStorage, ISecret
+import json
 import hashlib
 import os
 import shutil
@@ -90,3 +91,22 @@ class Storage(IStorage):
 
     def size(self, key):
         return os.path.getsize(os.path.join(self._local, key))
+
+class Secret(ISecret):
+    def __init__(self, name):
+        secrets_root = os.getenv("DATALAKE_SECRETS_ROOT", "./.secrets")
+        secrets_path = os.path.abspath(os.path.expanduser(secrets_root))
+        
+        try:
+            with open(os.path.join(secrets_path, name), "r") as f:
+                self._secret = f.read()
+        except IOError:
+            raise ValueError(f"Secret {name} doesn't exist or you don't have permissions to access it")
+
+    @property
+    def plain(self):
+        return self._secret
+
+    @property
+    def json(self):
+        return json.loads(self._secret)
