@@ -14,12 +14,12 @@ pytest:
     CATALOG_WORKERS: 1
   services:
     - alias: catalog
-      name: 641143039263.dkr.ecr.eu-west-3.amazonaws.com/equancy-datalake/catalog:1.0.0-alpha.1
+      name: public.ecr.aws/equancy-tech/datalake-catalog:1.0.0
   before_script:
   - poetry install --quiet
   script:
   - poetry run coverage run -m pytest -q --color=no
-  - poetry run coverage report --omit='tests/*'
+  - poetry run coverage report
 
 python-build:
   stage: Python Build
