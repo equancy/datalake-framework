@@ -1,3 +1,4 @@
+from logging import getLogger
 import pendulum
 from time import perf_counter_ns
 from datalake.interface import IMonitor
