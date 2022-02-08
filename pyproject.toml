@@ -1,5 +1,9 @@
 [tool.poetry]
 authors = ["Didier SCHMITT <dschmitt@equancy.com>"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
 description = "Datalake Framework"
 license = "MIT"
 name = "datalake-framework"
@@ -7,7 +11,7 @@ packages = [
   {include = "datalake"},
 ]
 repository = "https://git.equancy.cloud/equancy/data-technologies/datalake-framework"
-version = "1.0.0-alpha.2"
+version = "1.0.0"
 
 [tool.poetry.dependencies]
 Babel = "^2.9.1"
