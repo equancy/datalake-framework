@@ -29,20 +29,9 @@ class Datalake:
         except Exception as e:
             raise BadConfiguration(f"catalog URL is invalid ({str(e)})")
 
-        self._find_monitor_class(datalake_config["monitoring"])
-
-        # Configure Cloud provider
+        # Configure Cloud Services
         self._provider = catalog_config["provider"]
-        if self._provider == "aws":  # pragma: no cover
-            self._provider_module = import_module("datalake.provider.aws")
-        elif self._provider == "gcp":  # pragma: no cover
-            self._provider_module = import_module("datalake.provider.gcp")
-        elif self._provider == "azure":  # pragma: no cover
-            self._provider_module = import_module("datalake.provider.azure")
-        elif self._provider == "local":
-            self._provider_module = import_module("datalake.provider.local")
-        else:  # pragma: no cover
-            raise DatalakeError(f"Invalid datalake provider found: {self._provider}")
+        self._service_discovery = ServiceDiscovery(self._provider, datalake_config["monitoring"])
 
         # Configure CSV dialect
         self._dialect = StandardDialect()
@@ -58,38 +47,6 @@ class Datalake:
         response.raise_for_status()
         return response.json()
 
-    def _find_monitor_class(self, config):
-        if not isinstance(config, dict):
-            raise BadConfiguration("Monitoring configuration must be a dict")
-
-        monitor_split = config["class"].split(".")
-        if len(monitor_split) > 1:
-            class_name = monitor_split[-1]
-            module_name = ".".join(monitor_split[:-1])
-        else:
-            class_name = monitor_split[0]
-            module_name = "datalake.telemetry"
-
-        try:
-            module = import_module(module_name)
-        except ModuleNotFoundError:
-            raise BadConfiguration(f"'{module_name}' Monitor module cannot be found")
-
-        monitor_class = None
-        for n, c in inspect.getmembers(module, inspect.isclass):
-            if n.lower() == class_name.lower():
-                monitor_class = c
-                break
-        if monitor_class is None:
-            raise BadConfiguration(f"'{class_name}' Monitor class cannot be found in module {module_name}")
-        if not issubclass(c, IMonitor):
-            raise BadConfiguration(f"'{class_name}' Monitor class is not a subclass for IMonitor")
-
-        try:
-            self._monitor = c(**config["params"])
-        except Exception as e:
-            raise BadConfiguration(f"'{class_name}' Monitor class cannot be instanciated: {str(e)}")
-
     @property
     def provider(self):
         return self._provider
@@ -103,13 +60,13 @@ class Datalake:
         """
         Return the monitoring instance
         """
-        return self._monitor
+        return self._service_discovery.monitor
 
     def get_storage(self, bucket):
         """
         Return a storage from right provider
         """
-        return self._provider_module.Storage(bucket)
+        return self._service_discovery.get_storage(bucket)
 
     def get_entry(self, key):
         """
@@ -204,4 +161,73 @@ class Datalake:
         """
         Return a secret from right provider
         """
-        return self._provider_module.Secret(bucket)
+        return self._service_discovery.get_secret(name)
+
+
+class ServiceDiscovery:
+    def __init__(self, provider, monitoring, *args, **kwargs):
+        self._find_cloud_provider(provider)
+        self._find_monitor_class(monitoring)
+
+    def _find_cloud_provider(self, provider):
+        if provider == "aws":  # pragma: no cover
+            self._provider = import_module("datalake.provider.aws")
+        elif provider == "gcp":  # pragma: no cover
+            self._provider = import_module("datalake.provider.gcp")
+        elif provider == "azure":  # pragma: no cover
+            self._provider = import_module("datalake.provider.azure")
+        elif provider == "local":
+            self._provider = import_module("datalake.provider.local")
+        else:  # pragma: no cover
+            raise DatalakeError(f"Invalid storage provider: {provider}")
+
+    def _find_monitor_class(self, config):
+        if not isinstance(config, dict):
+            raise BadConfiguration("Monitoring configuration must be a dict")
+
+        monitor_split = config["class"].split(".")
+        if len(monitor_split) > 1:
+            class_name = monitor_split[-1]
+            module_name = ".".join(monitor_split[:-1])
+        else:
+            class_name = monitor_split[0]
+            module_name = "datalake.telemetry"
+
+        try:
+            module = import_module(module_name)
+        except ModuleNotFoundError:
+            raise BadConfiguration(f"'{module_name}' Monitor module cannot be found")
+
+        monitor_class = None
+        for n, c in inspect.getmembers(module, inspect.isclass):
+            if n.lower() == class_name.lower():
+                monitor_class = c
+                break
+        if monitor_class is None:
+            raise BadConfiguration(f"'{class_name}' Monitor class cannot be found in module {module_name}")
+        if not issubclass(c, IMonitor):
+            raise BadConfiguration(f"'{class_name}' Monitor class is not a subclass for IMonitor")
+
+        try:
+            self._monitor = c(**config["params"])
+        except Exception as e:
+            raise BadConfiguration(f"'{class_name}' Monitor class cannot be instanciated: {str(e)}")
+
+    @property
+    def monitor(self):
+        """
+        Return the monitoring instance
+        """
+        return self._monitor
+
+    def get_storage(self, bucket):
+        """
+        Return a storage from right provider
+        """
+        return self._provider.Storage(bucket)
+
+    def get_secret(self, name):
+        """
+        Return a secret from right provider
+        """
+        return self._provider.Secret(bucket)
