@@ -153,7 +153,7 @@ class IMonitor(ABC):  # pragma: no cover
         """
         logger = getLogger(__name__)
         try:
-            self.push_measurement(measurement)
+            self.push(measurement)
         except Exception as e:
             logger.warning(f"An error occured whilst pushing a measurement: {str(e)}")
 

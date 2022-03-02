@@ -187,11 +187,11 @@ class GoogleMonitor(IMonitor):  # pragma: no cover
     Monitoring with Google Cloud Monitoring
     """
 
-    def __init__(self, project_id):
+    def __init__(self, project_id, *args, **kwargs):
         self._client = monitoring_v3.MetricServiceClient()
         self._project_name = f"projects/{project_id}"
 
-    def push_metric(self, metric):
+    def push(self, metric):
         interval = monitoring_v3.TimeInterval({"end_time": {"seconds": metric.start_time.int_timestamp, "nanos": 0}})
         for field, value in metric.measures.items():
             series = monitoring_v3.TimeSeries()
