@@ -1,61 +1,23 @@
 # Datalake Framework
 
-## Storage
+A Python framework for working with a datalake's cloud assets like **data catalog**, **storage**, **monitoring** or **secrets**
 
-Storage objects can be manipulated with an implementation of `AbstractStorage`.
+The framework helps making abstraction of cloud resources when developing use-cases for a datalake. Supported cloud providers are
 
-> Currently AWS, Azure and GCP are supported
+- [Amazon Web Services](https://aws.amazon.com/)
+- [Google Cloud Plaform](https://cloud.google.com/)
+- [Microsoft Azure](https://azure.microsoft.com/)
 
-```python
-from datalake.provider.aws import Storage
+Additionnaly, most cloud features in the framework are available for **local development**. Hence developers can work on use-cases without requiring a full cloud insfrastructure or even work offline. 
 
-# Create a new Storage instance for a bucket:
-storage = Storage("my-bucket")
+## Installation
+
+Using pip
+
+```shell
+pip install datalake-framework
 ```
 
-### Detect objects
+## Features
 
-```python
-# Check if an object exists or not
-assert storage.exists("path/to/file.csv")
-
-# List all files from a prefix
-for key in storage.keys_iterator(search_path):
-    print(key)
-```
-
-### Copy, move or delete objects
-
-```python
-# Copy a file in the same bucket
-storage.copy("source/file.csv", "target/file.csv")
-# Copy a file in another bucket
-storage.copy("source/file.csv", "target/file.csv", "my-bucket")
-
-# Copy a file in the same bucket
-storage.move("source/file.csv", "target/file.csv")
-# Copy a file in another bucket
-storage.move("source/file.csv", "target/file.csv", "my-bucket")
-
-# Delete an obejct
-storage.delete("temp/file.csv")
-```
-
-### Download and Upload files
-
-```python
-# Download an object to a local file
-storage.download("path/to/object.csv", "/local/path/to/file.csv")
-
-# Upload a local file to an object
-storage.upload("/local/path/to/file.csv", "path/to/object.csv")
-```
-
-### Read data from object
-
-```python
-# Stream lines from an object
-line_iterator = storage.stream("path/to/object.csv")
-for row in csv.reader(line_iterator, "datalake"):
-    print(row)
-```
+Coming soon
