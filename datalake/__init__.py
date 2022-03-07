@@ -7,11 +7,14 @@ from datalake.exceptions import *
 
 
 class Datalake:
-    """
-    Main class for dealing with datacatalog and storage
-    """
+    """Main class for dealing with datacatalog and storage"""
 
     def __init__(self, config={}):
+        """
+        Args:
+            config (dict): configuration parameters in key/value pairs
+        
+        """
         if not isinstance(config, dict):
             raise BadConfiguration("Datalake configuration must be a dict")
 
@@ -49,28 +52,35 @@ class Datalake:
 
     @property
     def provider(self):
+        """Returns the configured name of the provider"""
         return self._provider
 
     @property
     def csv_dialect(self):
+        """Returns the configured ``csv.Dialect`` instance"""
         return self._dialect
 
     @property
     def monitor(self):
-        """
-        Return the monitoring instance
-        """
+        """Returns the concrete implementation for ``datalake.interface.IMonitor``"""
         return self._service_discovery.monitor
 
     def get_storage(self, bucket):
-        """
-        Return a storage from right provider
+        """Get a Storage instance for the provided bucket
+        
+        Args:
+            bucket (str): the name of the bucket (depending on the underlying provider)
+            
+        Returns:
+            A concrete instance of ``datalake.interface.IStorage``
         """
         return self._service_discovery.get_storage(bucket)
 
     def get_entry(self, key):
-        """
-        Return the specified catalog entry
+        """Get the catalog definition for an entry key
+
+        Returns:
+            a ``dict``
         """
         try:
             return self._call_catalog(f"catalog/entry/{key}")
@@ -130,16 +140,21 @@ class Datalake:
     def upload(
         self, filepath, store, key, path_params=None, content_type="text/plain", encoding="utf-8", metadata={}
     ):  # pragma: no cover
-        """
-        Uploads a local file in a store as the specified catalog entry
+        """Uploads a local file in a store as the specified catalog entry
+        
         """
         storage, path = self.get_entry_path_resolved(store, key, path_params, strict=True)
         storage.upload(filepath, path, content_type, encoding, metadata)
         return path
 
     def download(self, store, key, filepath, path_params=None):  # pragma: no cover
-        """
-        Downloads the specified catalog entry from a store to a local file
+        """Downloads the specified catalog entry from a store to a local file
+
+        Args:
+            store (str): the name of the store
+            key (str): the catalog key for the file to download
+            filepath (str): the local file path
+            path_params (dict): a map of key/value pair to fill the key path placeholders
         """
         storage, path = self.get_entry_path_resolved(store, key, path_params, strict=True)
         storage.download(path, filepath)
@@ -158,8 +173,13 @@ class Datalake:
         return DatasetReader(self, store, key, path_params)
 
     def get_secret(self, name):
-        """
-        Return a secret from right provider
+        """Get a Secret instance for the provider secret name
+
+        Args:
+            name (str): the name of the secret (depending on the underlying provider)
+
+        Returns:
+            A concrete instance of ``datalake.interface.ISecret``
         """
         return self._service_discovery.get_secret(name)
 
