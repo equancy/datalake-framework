@@ -3,14 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Datalake Framework documentation
-================================
+Datalake Framework
+==================
 
 .. toctree::
    :maxdepth: 4
-   :caption: Contents:
+   :hidden:
 
    datalake
+   api/index
 
 
 Indices and tables
