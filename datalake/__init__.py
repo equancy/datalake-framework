@@ -13,7 +13,6 @@ class Datalake:
         """
         Args:
             config (dict): configuration parameters in key/value pairs
-        
         """
         if not isinstance(config, dict):
             raise BadConfiguration("Datalake configuration must be a dict")
@@ -67,10 +66,10 @@ class Datalake:
 
     def get_storage(self, bucket):
         """Get a Storage instance for the provided bucket
-        
+
         Args:
             bucket (str): the name of the bucket (depending on the underlying provider)
-            
+
         Returns:
             A concrete instance of ``datalake.interface.IStorage``
         """
@@ -90,8 +89,14 @@ class Datalake:
             raise  # pragma: no cover
 
     def resolve_path(self, store, path):
-        """
-        Returns a tuple `(bucket, path, uri)` resolving the path in the specified store
+        """Resolves a path in a store name to a fully qualified bucket path
+
+        Args:
+            store (str): the name of a store
+            path (str):  the path to resolve in the store
+
+        Returns:
+            a tuple ``(bucket, path, uri)`` with the bucket name, the full path and a fully qualified URI
         """
         try:
             res = self._call_catalog(f"storage/{store}/{path}")
@@ -140,9 +145,7 @@ class Datalake:
     def upload(
         self, filepath, store, key, path_params=None, content_type="text/plain", encoding="utf-8", metadata={}
     ):  # pragma: no cover
-        """Uploads a local file in a store as the specified catalog entry
-        
-        """
+        """Uploads a local file in a store as the specified catalog entry"""
         storage, path = self.get_entry_path_resolved(store, key, path_params, strict=True)
         storage.upload(filepath, path, content_type, encoding, metadata)
         return path

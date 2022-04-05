@@ -32,14 +32,46 @@ def _to_date(string, format):
 
 
 def cast_integer(x, lang="en_US"):
+    """Cast a string as an integer according to a locale
+
+    Args:
+        x (str): a value to cast
+        lang (str): the locale used to interpret the string
+    
+    Returns:
+        the value casted as ``int``
+    """
     return int(_to_decimal(x, lang))
 
 
 def cast_float(x, lang="en_US"):
+    """Cast a string as an decimal according to a locale
+
+    Args:
+        x (str): a value to cast
+        lang (str): the locale used to interpret the string.
+    
+    Returns:
+        the value casted as ``float``
+    """
     return float(_to_decimal(x, lang))
 
 
 def cast_date(d, formats=[STANDARD_DATE_FORMAT]):
+    """Cast a string as an date according to a set of formats strings
+
+    Args:
+        d (str): a value to cast
+        formats (list(str)): a set of formats used to try to cast the string as a date. See also the `Supported formats`_
+    
+    Returns:
+        the value formatted with `ISO 8601`_ date format
+
+    .. _Supported formats:
+       https://pendulum.eustace.io/docs/#tokens
+    .. _ISO 8601:
+       https://www.iso.org/iso-8601-date-and-time-format.html 
+    """
     for f in formats:
         try:
             return _to_date(d, f).format(STANDARD_DATE_FORMAT)
@@ -49,6 +81,20 @@ def cast_date(d, formats=[STANDARD_DATE_FORMAT]):
 
 
 def cast_time(d, formats=[STANDARD_TIME_FORMAT]):
+    """Cast a string as an time according to a set of formats strings
+
+    Args:
+        d (str): a value to cast
+        formats (list(str)): a set of formats used to try to cast the string as a time. See also the `Supported formats`_
+    
+    Returns:
+        the value formatted with `ISO 8601`_ time format
+
+    .. _Supported formats:
+       https://pendulum.eustace.io/docs/#tokens
+    .. _ISO 8601:
+       https://www.iso.org/iso-8601-date-and-time-format.html 
+    """
     for f in formats:
         try:
             return _to_date(d, f).format(STANDARD_TIME_FORMAT)
@@ -58,6 +104,20 @@ def cast_time(d, formats=[STANDARD_TIME_FORMAT]):
 
 
 def cast_datetime(d, formats=[STANDARD_DATETIME_FORMAT]):
+    """Cast a string as an datetime according to a set of formats strings
+
+    Args:
+        d (str): a value to cast
+        formats (list(str)): a set of formats used to try to cast the string as a datetime. See also the `Supported formats`_
+    
+    Returns:
+        the value formatted with `ISO 8601`_ datetime format
+
+    .. _Supported formats:
+       https://pendulum.eustace.io/docs/#tokens
+    .. _ISO 8601:
+       https://www.iso.org/iso-8601-date-and-time-format.html 
+    """
     for f in formats:
         try:
             return _to_date(d, f).format(STANDARD_DATETIME_FORMAT)
@@ -67,6 +127,12 @@ def cast_datetime(d, formats=[STANDARD_DATETIME_FORMAT]):
 
 
 class StandardDialect(csv.Dialect):
+    """CSV format according to `RFC 4180`_
+    
+    .. _RFC 4180:
+       https://datatracker.ietf.org/doc/html/rfc4180
+    """
+
     delimiter = ","
     quotechar = '"'
     escapechar = None
@@ -79,6 +145,29 @@ class StandardDialect(csv.Dialect):
 
 class DatasetBuilder:
     def __init__(self, datalake, key, path=None, lang="en_US", date_formats=None, ciphered=False):
+        """Creates a new CSV file according to a Datalake's standards
+
+        Args:
+            datalake (Datalake): a datalake instance
+            key (str): the catalog entry identifier for which a dataset is created
+            path (str): the path to a local file to create. Default to a auto-generated temp file
+            lang (str): a locale to use for casting numbers
+            date_formats (list(str)): a list of datetime formats to use for casting date and times. Defaults to iso8601 formats.
+            ciphered (bool): Indicates whether the dataset has pseudonymized values or not. Defaults to ``False``
+
+        Example:
+            building a dataset with dicts::
+
+                with DatasetBuilder(dlk, "my-entry") as dsb:
+                    for i in range(10):
+                        dsb.add_dict({
+                            "id": i,
+                            "column_s" : "lorem ipsum",
+                            "column_i": 1234.56,
+                            "column_d": "2022-04-01",
+                        })
+                dlk.upload(dsb.path, "storename", "my-entry")
+        """
         self._datalake = datalake
         self._catalog_key = key
         self._catalog_entry = datalake.get_entry(key)
@@ -121,16 +210,16 @@ class DatasetBuilder:
 
     @property
     def path(self):
+        """The path to the local file"""
         return self._path
 
     @property
     def row_count(self):
+        """The number of rows appended in the dataset"""
         return self._row_count
 
     def new_dict(self):
-        """
-        Returns an empty row dict
-        """
+        """Returns an empty row as ``dict``"""
         return {name: None for name in self._header}
 
     def _add(self, row):
@@ -138,8 +227,10 @@ class DatasetBuilder:
         self._row_count += 1
 
     def add_dict(self, row):
-        """
-        Append a dict as a row in the dataset
+        """Appends a row in the dataset
+        
+        Args:
+            row (dict): a row in key/value pairs
         """
         if row.keys() ^ set(self._header):
             raise ValueError(f"Row has not the expected column count {len(row.keys())}/{len(self._header)}")
@@ -149,8 +240,10 @@ class DatasetBuilder:
         self.add_sequence(seq)
 
     def add_sequence(self, row):
-        """
-        Append a sequence as a row in the dataset
+        """Appends a row in the dataset
+        
+        Args:
+            row (list): a row sequence of values
         """
         if len(row) != len(self._typing):
             raise ValueError(f"Row has not the expected column count {len(row)}/{len(self._typing)}")
@@ -177,6 +270,26 @@ class DatasetBuilder:
 
 class DatasetReader:
     def __init__(self, datalake, store, key, path_params=None, ciphered=False):
+        """Reads a CSV dataset from a store.
+
+        No file is downloaded and data is streamed when using the iterators.
+
+        Args:
+            datalake (Datalake): a datalake instance
+            store (str): the name of the store to read the dataset from
+            key (str): the catalog entry identifier for which a dataset is read
+            path_params (dict): the entry path placeholders used to find a specific dataset
+            ciphered (bool): Indicates whether the dataset has pseudonymized values or not. Defaults to ``False``
+
+        Example:
+            Count the number of rows in a dataset::
+
+                dsr = DatasetReader(dlk, "storename", "my-entry")
+                count = 0
+                for item in dsr.iter_list():
+                    count += 1
+                print(f"Found {count} rows")
+        """
         self._datalake = datalake
         self._storage, self._path = self._datalake.get_entry_path_resolved(store, key, path_params, strict=True)
         self._catalog_key = key
@@ -191,6 +304,7 @@ class DatasetReader:
                 self._ciphered.append(ciphered and item["gdpr"]["pii"])
 
     def iter_list(self):
+        """Returns an iterator of ``list`` for each row"""
         reader = csv.reader(self._storage.stream(self._path), self._datalake.csv_dialect)
         row_count = 0
         for row in reader:
@@ -210,5 +324,6 @@ class DatasetReader:
             yield typed_row
 
     def iter_dict(self):
+        """Returns an iterator of ``dict`` for each row"""
         for row in self.iter_list():
             yield {self._header[idx]: value for idx, value in enumerate(row)}
