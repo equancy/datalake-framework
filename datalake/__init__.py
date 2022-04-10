@@ -253,4 +253,4 @@ class ServiceDiscovery:
         """
         Return a secret from right provider
         """
-        return self._provider.Secret(bucket)
+        return self._provider.Secret(name)

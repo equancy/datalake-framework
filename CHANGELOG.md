@@ -1,3 +1,7 @@
+## 1.0.3
+
+- Minor fix
+
 ## 1.0.2
 
 - Fixed monitoring interface
