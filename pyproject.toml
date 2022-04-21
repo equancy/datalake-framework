@@ -5,6 +5,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 description = "Datalake Framework"
+documentation = "https://docs.equancy.cloud/datalake-framework/latest/index.html"
 license = "MIT"
 name = "datalake-framework"
 packages = [

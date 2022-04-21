@@ -51,7 +51,7 @@ python-docs:
   script:
   - unset AWS_ACCESS_KEY_ID
   - unset AWS_SECRET_ACCESS_KEY
-  - aws s3 sync dist/docs/ s3://equancy-tech-cloudfront-docs/datalake-framework/latest/ --cache-control='max-age=300'
+  - aws s3 sync dist/docs/ s3://equancy-tech-cloudfront-docs/datalake-framework/latest/ --cache-control='max-age=300' --quiet
   cache:
     paths:
     - dist
