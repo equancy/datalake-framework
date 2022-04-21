@@ -49,7 +49,8 @@ python-docs:
       - docs/**/*
   image:  amazon/aws-cli
   script:
-  - aws sts get-caller-identity
+  - unset AWS_ACCESS_KEY_ID
+  - unset AWS_SECRET_ACCESS_KEY
   - aws s3 sync dist/docs/ s3://equancy-tech-cloudfront-docs/datalake-framework/latest/ --cache-control='max-age=300'
   cache:
     paths:
