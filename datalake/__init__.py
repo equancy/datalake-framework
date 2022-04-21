@@ -188,8 +188,40 @@ class Datalake:
 
 
 class ServiceDiscovery:
-    def __init__(self, provider, monitoring, *args, **kwargs):
+    def __init__(self, provider, monitoring=None, *args, **kwargs):
+        """Cloud resources reslover
+
+        Args:
+            provider (str): the cloud provider (``"aws"``, ``"azure"`` or ``"gcp"``) or ``"local"``
+            monitoring (dict): the monitoring implementation spec
+
+        Example:
+            local provider with a console monitoring::
+
+                monitoring_spec = {
+                    "class": "NoMonitor",
+                    "params": {
+                        "quiet": False
+                    }
+                }
+                service_discovery = ServiceDiscovery("local", monitoring_spec)
+
+            Google cloud typical setup::
+
+                monitoring_spec = {
+                    "class": "datalake.provider.gcp.GoogleMonitor",
+                    "params": {
+                        "project_id": "my-google-project-id"
+                    }
+                }
+                service_discovery = ServiceDiscovery("gcp", monitoring_spec)
+        Raises:
+            DatalakeError: when the provider is invalid
+            BadConfiguration: when monitoring spec is invalid
+        """
         self._find_cloud_provider(provider)
+        if monitoring is None:
+            monitoring = {"class": "NoMonitor", "params": {}}
         self._find_monitor_class(monitoring)
 
     def _find_cloud_provider(self, provider):
@@ -238,19 +270,21 @@ class ServiceDiscovery:
 
     @property
     def monitor(self):
-        """
-        Return the monitoring instance
-        """
+        """Returns a ``datalake.interface.IMonitor`` instance"""
         return self._monitor
 
     def get_storage(self, bucket):
-        """
-        Return a storage from right provider
+        """Returns a ``datalake.interface.IStorage`` instance
+
+        Args:
+            bucket (str): the name of the bucket to fetch
         """
         return self._provider.Storage(bucket)
 
     def get_secret(self, name):
-        """
-        Return a secret from right provider
+        """Returns a ``datalake.interface.ISecret`` instance
+
+        Args:
+            name (str): the name of the secret to fetch
         """
         return self._provider.Secret(name)

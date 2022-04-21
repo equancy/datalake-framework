@@ -10,7 +10,7 @@ Datalake Framework
    :maxdepth: 4
    :hidden:
 
-   storage
+   cloud
    datacatalog
    monitoring
    api/index
