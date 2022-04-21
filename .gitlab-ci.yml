@@ -2,6 +2,7 @@
 stages:
 - Python Test
 - Python Build
+- Python Docs
 - Python Release
 
 pytest:
@@ -10,8 +11,6 @@ pytest:
     changes:
       - datalake/**/*
       - tests/**/*
-    refs:
-      - branches
   image: 641143039263.dkr.ecr.eu-west-3.amazonaws.com/runner/ci-python:3.8
   variables:
     CATALOG_URL: http://catalog:8080
@@ -28,14 +27,34 @@ pytest:
 python-build:
   stage: Python Build
   only:
-  - tags
+    changes:
+      - datalake/**/*
+      - docs/**/*
   image: 641143039263.dkr.ecr.eu-west-3.amazonaws.com/runner/ci-python:3.8
+  before_script:
+  - poetry install --quiet
   script:
   - poetry build --quiet
+  - poetry run sphinx-build docs/ dist/docs/ -q
   cache:
     paths:
     - dist
     policy: push
+
+python-docs:
+  stage: Python Docs
+  only:
+    changes:
+      - datalake/**/*
+      - docs/**/*
+  image:  amazon/aws-cli
+  script:
+  - aws s3 sync dist/docs/ s3://equancy-tech-cloudfront-docs/datalake-framework/latest/ --cache-control='max-age=300'
+  cache:
+    paths:
+    - dist
+    policy: pull
+
 
 nexus-release:
   stage: Python Release
