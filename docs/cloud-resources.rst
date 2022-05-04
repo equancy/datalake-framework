@@ -6,8 +6,8 @@ The Datalake framework helps to use cloud resources without implementing the clo
 You can start building data pipelines locally and deliver them in the cloud without a single change in your code.
 Currently the following cloud providers are supported:
 
-- **Amazon Web Service**
-- **Azure**
+- **Amazon Web Services**
+- **Microsoft Azure**
 - **Google Cloud Platform**
 - **local** is a special implementation for mocking cloud resources and is meant for local development or unit-testing
 

@@ -12,7 +12,7 @@ packages = [
   {include = "datalake"},
 ]
 readme = "README.md"
-repository = "https://git.equancy.cloud/equancy/data-technologies/datalake-framework"
+repository = "https://github.com/equancy/datalake-framework"
 version = "1.0.4"
 
 [tool.poetry.dependencies]

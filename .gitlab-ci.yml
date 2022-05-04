@@ -11,13 +11,12 @@ pytest:
     changes:
       - datalake/**/*
       - tests/**/*
-  image: 641143039263.dkr.ecr.eu-west-3.amazonaws.com/runner/ci-python:3.8
   variables:
     CATALOG_URL: http://catalog:8080
     CATALOG_WORKERS: 1
   services:
     - alias: catalog
-      name: public.ecr.aws/equancy-tech/datalake-catalog:1.0.1
+      name: public.ecr.aws/equancy-tech/datalake-catalog:1.0.3
   before_script:
   - poetry install --quiet
   script:
@@ -30,7 +29,7 @@ python-build:
     changes:
       - datalake/**/*
       - docs/**/*
-  image: 641143039263.dkr.ecr.eu-west-3.amazonaws.com/runner/ci-python:3.8
+  image: public.ecr.aws/equancy-tech/ci-python:3.8
   before_script:
   - poetry install --quiet
   script:
@@ -57,25 +56,11 @@ python-docs:
     - dist
     policy: pull
 
-nexus-release:
-  stage: Python Release
-  only:
-  - tags
-  image: 641143039263.dkr.ecr.eu-west-3.amazonaws.com/runner/ci-python:3.8
-  script:
-  - poetry config repositories.equancy https://nexus.apps.equancy.cloud/repository/equancy-python/
-  - poetry config http-basic.equancy ${NEXUS_USER} ${NEXUS_PASSWORD}
-  - poetry publish -r equancy
-  cache:
-    paths:
-    - dist
-    policy: pull
-
 pypi-release:
   stage: Python Release
   only:
   - tags
-  image: 641143039263.dkr.ecr.eu-west-3.amazonaws.com/runner/ci-python:3.8
+  image: public.ecr.aws/equancy-tech/ci-python:3.8
   script:
   - poetry publish -u "${PYPI_USER}" -p "${PYPI_PASSWORD}"
   cache:

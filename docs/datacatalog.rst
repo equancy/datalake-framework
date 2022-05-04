@@ -1,4 +1,0 @@
-Datacatalog
-===========
-
-Hello there

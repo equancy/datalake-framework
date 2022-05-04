@@ -16,7 +16,7 @@ launch a **development** datalake-catalog instance on port 8080
 docker run --rm -d \
     --name catalog \
     -p 8080:8080 \
-    public.ecr.aws/equancy-tech/datalake-catalog:1.0.0
+    public.ecr.aws/equancy-tech/datalake-catalog:1.0.3
 ```
 
 for GCP, get credentials for **equancyrandd**

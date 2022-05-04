@@ -17,7 +17,3 @@ Using pip
 ```shell
 pip install datalake-framework
 ```
-
-## Features
-
-Coming soon
