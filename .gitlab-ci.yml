@@ -11,6 +11,7 @@ pytest:
     changes:
       - datalake/**/*
       - tests/**/*
+  image: public.ecr.aws/equancy-tech/ci-python:3.8
   variables:
     CATALOG_URL: http://catalog:8080
     CATALOG_WORKERS: 1
