@@ -6,6 +6,13 @@ import re
 from tempfile import mkstemp
 from babel.core import Locale
 
+try:
+    import pandas
+
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+
 STANDARD_DATE_FORMAT = "YYYY-MM-DD"
 STANDARD_TIME_FORMAT = "HH:mm:ss.SSSZZ"
 STANDARD_DATETIME_FORMAT = "YYYY-MM-DDTHH:mm:ss.SSSZZ"
@@ -37,7 +44,7 @@ def cast_integer(x, lang="en_US"):
     Args:
         x (str): a value to cast
         lang (str): the locale used to interpret the string
-    
+
     Returns:
         the value casted as ``int``
     """
@@ -50,7 +57,7 @@ def cast_float(x, lang="en_US"):
     Args:
         x (str): a value to cast
         lang (str): the locale used to interpret the string.
-    
+
     Returns:
         the value casted as ``float``
     """
@@ -63,14 +70,14 @@ def cast_date(d, formats=[STANDARD_DATE_FORMAT]):
     Args:
         d (str): a value to cast
         formats (list(str)): a set of formats used to try to cast the string as a date. See also the `Supported formats`_
-    
+
     Returns:
         the value formatted with `ISO 8601`_ date format
 
     .. _Supported formats:
        https://pendulum.eustace.io/docs/#tokens
     .. _ISO 8601:
-       https://www.iso.org/iso-8601-date-and-time-format.html 
+       https://www.iso.org/iso-8601-date-and-time-format.html
     """
     for f in formats:
         try:
@@ -86,14 +93,14 @@ def cast_time(d, formats=[STANDARD_TIME_FORMAT]):
     Args:
         d (str): a value to cast
         formats (list(str)): a set of formats used to try to cast the string as a time. See also the `Supported formats`_
-    
+
     Returns:
         the value formatted with `ISO 8601`_ time format
 
     .. _Supported formats:
        https://pendulum.eustace.io/docs/#tokens
     .. _ISO 8601:
-       https://www.iso.org/iso-8601-date-and-time-format.html 
+       https://www.iso.org/iso-8601-date-and-time-format.html
     """
     for f in formats:
         try:
@@ -109,14 +116,14 @@ def cast_datetime(d, formats=[STANDARD_DATETIME_FORMAT]):
     Args:
         d (str): a value to cast
         formats (list(str)): a set of formats used to try to cast the string as a datetime. See also the `Supported formats`_
-    
+
     Returns:
         the value formatted with `ISO 8601`_ datetime format
 
     .. _Supported formats:
        https://pendulum.eustace.io/docs/#tokens
     .. _ISO 8601:
-       https://www.iso.org/iso-8601-date-and-time-format.html 
+       https://www.iso.org/iso-8601-date-and-time-format.html
     """
     for f in formats:
         try:
@@ -128,7 +135,7 @@ def cast_datetime(d, formats=[STANDARD_DATETIME_FORMAT]):
 
 class StandardDialect(csv.Dialect):
     """CSV format according to `RFC 4180`_
-    
+
     .. _RFC 4180:
        https://datatracker.ietf.org/doc/html/rfc4180
     """
@@ -228,7 +235,7 @@ class DatasetBuilder:
 
     def add_dict(self, row):
         """Appends a row in the dataset
-        
+
         Args:
             row (dict): a row in key/value pairs
         """
@@ -241,7 +248,7 @@ class DatasetBuilder:
 
     def add_sequence(self, row):
         """Appends a row in the dataset
-        
+
         Args:
             row (list): a row sequence of values
         """
@@ -327,3 +334,14 @@ class DatasetReader:
         """Returns an iterator of ``dict`` for each row"""
         for row in self.iter_list():
             yield {self._header[idx]: value for idx, value in enumerate(row)}
+
+    def dataframe(self):
+        """Returns a pandas DataFrame
+
+        Raises:
+            RuntimeError: if pandas package is not installed
+        """
+        if not PANDAS_AVAILABLE:  # pragma: no cover
+            raise RuntimeError("pandas package is missing")
+
+        return pandas.DataFrame(self.iter_list(), columns=self._header)

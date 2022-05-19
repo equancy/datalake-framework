@@ -27,6 +27,7 @@ google-cloud-pubsub = "^2.12.1"
 google-cloud-secret-manager = "^2.10.0"
 google-cloud-storage = "^2.3.0"
 influxdb-client = "^1.28.0"
+pandas = {version = "^1.4.2", optional = true}
 pendulum = "^2.1.2"
 python = "^3.8"
 requests = "^2.27.1"
@@ -37,6 +38,10 @@ black = "^22.3.0"
 coverage = "^6.3.3"
 flake9 = "^3.8.3"
 pytest = "^6.2.5"
+
+[tool.poetry.extras]
+all = ["pandas"]
+pandas = ["pandas"]
 
 [tool.black]
 line-length = 125
@@ -54,9 +59,6 @@ ignore = "E501,W503"
 
 [tool.pytest.ini_options]
 addopts = "-ra -v --no-header"
-markers = [
-  "providers: marks tests requiring cloud providers",
-]
 filterwarnings = [
   # see https://github.com/googleapis/python-api-common-protos/issues/23
   "ignore:Call to deprecated create function FieldDescriptor",
@@ -67,6 +69,9 @@ filterwarnings = [
   "ignore:Call to deprecated create function OneofDescriptor",
   "ignore:Call to deprecated create function ServiceDescriptor",
   "ignore:Call to deprecated create function MethodDescriptor",
+]
+markers = [
+  "providers: marks tests requiring cloud providers",
 ]
 minversion = "6.0"
 testpaths = ["tests"]

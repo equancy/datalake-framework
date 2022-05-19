@@ -213,3 +213,9 @@ def test_dataset_reader(datalake_instance):
             assert item["pct_mineurs"] == 30
             assert item["pct_femmes"] == 9
             assert item["ensemble"] == 19.3
+
+    df = dsr.dataframe()
+    assert df.shape == (10, 4)
+    assert round(df["ensemble"].sum(), 2) == 382.3
+    assert df["pct_mineurs"].mean() == 25.6
+    assert df["pct_femmes"].mean() == 12.0
