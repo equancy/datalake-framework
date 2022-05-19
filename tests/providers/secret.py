@@ -14,11 +14,13 @@ def expected_json():
         return json.load(f)
 
 
+@pytest.mark.providers
 def test_plain(plain_secret, expected_text):
     s = plain_secret.plain
     assert s == expected_text
 
 
+@pytest.mark.providers
 def test_json(json_secret, expected_json):
     s = json_secret.json
     assert s == expected_json

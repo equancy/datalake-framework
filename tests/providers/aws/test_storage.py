@@ -13,6 +13,7 @@ def persisted():
     return Storage("eqlab-datamock-persist")
 
 
+@pytest.mark.providers
 def test_unknown_bucket():
     with pytest.raises(ValueError):
         return Storage("unknown-bucket")

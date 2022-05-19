@@ -14,6 +14,7 @@ def persisted():
     return Storage("datamock.persist")
 
 
+@pytest.mark.providers
 def test_unknown_bucket():
     with pytest.raises(ContainerNotFound):
         return Storage("datamock.unkown")

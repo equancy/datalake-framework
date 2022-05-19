@@ -13,6 +13,7 @@ def json_secret():
     return Secret("datalake/unittest/sample")
 
 
+@pytest.mark.providers
 def test_unknown_secret():
     with pytest.raises(ValueError) as e:
         return Secret("unknown-secret")

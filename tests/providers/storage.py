@@ -9,6 +9,7 @@ SCHILLER_SHA256 = "f2e04ea5ecb18c45c604a30206417848f80fc21f445d032043c23e268c6a3
 
 
 @pytest.fixture(scope="module")
+@pytest.mark.providers
 def test_id():
     return uuid4()
 
@@ -28,24 +29,29 @@ def text():
     return s
 
 
+@pytest.mark.providers
 def test_exist(persisted):
     assert persisted.exists("roshi.png")
     assert not persisted.exists("not-exists.dat")
 
 
+@pytest.mark.providers
 def test_checksum(persisted):
     assert persisted.checksum("roshi.png") == ROSHI_SHA256
 
 
+@pytest.mark.providers
 def test_size(persisted):
     assert persisted.size("roshi.png") == 109376
 
 
+@pytest.mark.providers
 def test_folder(persisted):
     assert persisted.is_folder("empty-folder/")
     assert not persisted.is_folder("roshi.png")
 
 
+@pytest.mark.providers
 def test_listing(persisted):
     s = {k for k in persisted.keys_iterator("an-die-freude/")}
     assert not s ^ {
@@ -60,6 +66,7 @@ def test_listing(persisted):
     assert len(s) == 0
 
 
+@pytest.mark.providers
 def test_upload(storage, test_id):
     key = f"{test_id}/schiller/ode-to-joy.txt"
     storage.upload(
@@ -76,6 +83,7 @@ def test_upload(storage, test_id):
     assert storage.checksum(key) == SCHILLER_SHA256
 
 
+@pytest.mark.providers
 def test_download(persisted, temp_file):
     persisted.download("roshi.png", temp_file)
     m = hashlib.sha256()
@@ -84,6 +92,7 @@ def test_download(persisted, temp_file):
     assert m.hexdigest() == ROSHI_SHA256
 
 
+@pytest.mark.providers
 def test_copy(storage, test_id):
     src = f"{test_id}/schiller/ode-to-joy.txt"
     dst = f"{test_id}/beethoven/symphony-9.txt"
@@ -95,6 +104,7 @@ def test_copy(storage, test_id):
     assert storage.checksum(src) == storage.checksum(dst)
 
 
+@pytest.mark.providers
 def test_copy_across(persisted, storage, test_id):
     # Copy across buckets
     src = "an-die-freude/part-1.txt"
@@ -107,6 +117,7 @@ def test_copy_across(persisted, storage, test_id):
     assert persisted.checksum(src) == storage.checksum(dst)
 
 
+@pytest.mark.providers
 def test_delete(storage, test_id):
     key = f"{test_id}/schiller/ode-to-joy.txt"
     assert storage.exists(key)
@@ -114,6 +125,7 @@ def test_delete(storage, test_id):
     assert not storage.exists(key)
 
 
+@pytest.mark.providers
 def test_move(storage, test_id):
     src = f"{test_id}/beethoven/symphony-9.txt"
     dst = f"{test_id}/classics/an-die-freude.txt"
@@ -126,6 +138,7 @@ def test_move(storage, test_id):
     assert checksum == storage.checksum(dst)
 
 
+@pytest.mark.providers
 def test_put(storage, test_id, text):
     key = f"{test_id}/friedrich/ode-to-joy.txt"
     storage.put(
@@ -141,12 +154,14 @@ def test_put(storage, test_id, text):
     assert storage.exists(key)
 
 
+@pytest.mark.providers
 def test_get(storage, test_id, text):
     key = f"{test_id}/friedrich/ode-to-joy.txt"
     data = storage.get(key)
     assert data == text
 
 
+@pytest.mark.providers
 def test_stream(storage, test_id, text):
     key = f"{test_id}/friedrich/ode-to-joy.txt"
     data = [l for l in storage.stream(key)]
