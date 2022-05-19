@@ -172,8 +172,8 @@ class Datalake:
     def new_dataset_builder(self, key, path=None, lang="en_US", date_formats=None, ciphered=False):
         return DatasetBuilder(self, key, path, lang, date_formats, ciphered)
 
-    def new_dataset_reader(self, store, key, path_params=None):
-        return DatasetReader(self, store, key, path_params)
+    def new_dataset_reader(self, store, key, path_params=None, ciphered=False):
+        return DatasetReader(self, store, key, path_params, ciphered)
 
     def get_secret(self, name):
         """Get a Secret instance for the provider secret name
