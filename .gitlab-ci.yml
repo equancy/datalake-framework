@@ -19,7 +19,7 @@ pytest:
     - alias: catalog
       name: public.ecr.aws/equancy-tech/datalake-catalog:1.0.3
   before_script:
-  - poetry install --quiet
+  - poetry install --quiet --extras pandas
   script:
   - poetry run coverage run -m pytest -q --color=no
   - poetry run coverage report
