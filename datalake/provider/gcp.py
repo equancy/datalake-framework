@@ -9,6 +9,8 @@ from google.cloud import secretmanager
 from google.cloud import monitoring_v3
 import google.api_core.exceptions
 
+DEFAULT_GCS_TIMEOUT = 900
+
 
 class Storage(IStorage):
     def __init__(self, bucket):
@@ -50,7 +52,7 @@ class Storage(IStorage):
 
     def upload(self, src, dst, content_type="text/csv", encoding="utf-8", metadata={}):
         blob = google_storage.blob.Blob(dst, self._bucket)
-        blob.upload_from_filename(src)
+        blob.upload_from_filename(src, timeout=DEFAULT_GCS_TIMEOUT)
         blob.content_encoding = encoding
         blob.content_type = content_type
         blob.metadata = metadata
@@ -58,16 +60,19 @@ class Storage(IStorage):
 
     def download(self, src, dst):
         blob = self._bucket.get_blob(src)
-        blob.download_to_filename(dst)
+        blob.download_to_filename(dst, timeout=DEFAULT_GCS_TIMEOUT)
 
     def copy(self, src, dst, bucket=None):
-        blob = self._bucket.get_blob(src)
+        source = self._bucket.get_blob(src)
         bucket = self._bucket if bucket is None else self._client.get_bucket(bucket)
-        self._bucket.copy_blob(blob, bucket, new_name=dst)
+        dest = bucket.blob(dst)
+        token, bytes_rewritten, total_bytes = dest.rewrite(source, timeout=DEFAULT_GCS_TIMEOUT)
+        while token is not None:
+            token, bytes_rewritten, total_bytes = dest.rewrite(source, token=token, timeout=DEFAULT_GCS_TIMEOUT)
 
     def delete(self, key):
         blob = self._bucket.get_blob(key)
-        self._bucket.delete_blob(key)
+        self._bucket.delete_blob(key, timeout=DEFAULT_GCS_TIMEOUT)
 
     def move(self, src, dst, bucket=None):
         self.copy(src, dst, bucket)

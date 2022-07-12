@@ -1,7 +1,7 @@
 [tool.poetry]
 authors = ["Didier SCHMITT <dschmitt@equancy.com>"]
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 description = "Datalake Framework"

@@ -1,3 +1,8 @@
+## 1.0.4
+
+- Changed GCP blob copy method
+- Added helper for Pandas Dataframe
+
 ## 1.0.3
 
 - Minor fix

@@ -107,8 +107,8 @@ def test_copy(storage, test_id):
 @pytest.mark.providers
 def test_copy_across(persisted, storage, test_id):
     # Copy across buckets
-    src = "an-die-freude/part-1.txt"
-    dst = f"{test_id}/an-die-freude/part-1.txt"
+    src = "big-one/ODD_CSV_V2.zip"
+    dst = f"{test_id}/big-one/ODD_CSV_V2.zip"
     assert persisted.exists(src)
     assert not storage.exists(dst)
     persisted.copy(src, dst, storage.name)
